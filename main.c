@@ -18,7 +18,7 @@ int main() {
 
     // Print the contents of the RAM
     printf("RAM contents after loading ROM:\n");
-    print_ram_contents(ram->mem, MEMORY_SIZE); // Print the mem contents for QA
+    print_ram_contents(ram->mem, MEMORY_SIZE, "RAM_DUMP.txt"); // Print the mem contents for QA
 
     // Continue with emulator logic...
 
