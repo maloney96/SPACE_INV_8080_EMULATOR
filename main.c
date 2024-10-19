@@ -17,7 +17,7 @@ int main() {
     load_rom(ram, "invaders/invaders.rom");
 
     // Print the contents of the RAM
-    printf("RAM contents after loading ROM:\n");
+    printf("Check RAM_DUMP.txt file for RAM contents after loading ROM...\n");
     print_ram_contents(ram->mem, MEMORY_SIZE, "RAM_DUMP.txt"); // Print the mem contents for QA
 
     // Continue with emulator logic...

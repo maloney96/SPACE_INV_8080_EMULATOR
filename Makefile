@@ -2,7 +2,7 @@
 CC = clang
 
 # Compiler flags
-CFLAGS = -g -fcolor-diagnostics -fansi-escape-codes
+CFLAGS = -g 
 
 # Source files
 SRCS = main.c memory/memory.c memory/mem_utils.c
@@ -26,7 +26,7 @@ $(TARGET): $(OBJS)
 
 # Clean up object files and the executable
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJS) $(TARGET) RAM_DUMP.txt
 
 # Phony targets
 .PHONY: all clean

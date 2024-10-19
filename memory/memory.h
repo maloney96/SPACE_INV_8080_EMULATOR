@@ -4,12 +4,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-// Define memory map regions
-// #define ROM_START 0x0000
-// #define ROM_END 0x1FFF
-// #define RAM_START 0x2000
-// #define RAM_END 0x3FFF
-
 // Define a struct to represent a memory block
 typedef struct {
     int size;

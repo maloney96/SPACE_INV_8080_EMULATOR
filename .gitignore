@@ -4,3 +4,4 @@
 emulator
 RAM_DUMP.txt
 emulator.dSYM/
+*.o

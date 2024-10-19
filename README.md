@@ -2,8 +2,15 @@
 
 ### Memory
 
-Rom is created by combining all invaders files within the /invaders folder
+1. Place all invaders source files into the invaders folder..
+cd into the invaders folder and run the following..
 cat invaders.h invaders.g invaders.f invaders.e > invaders.rom
+
+2. cd .. into SPACE_INV_8080_EMULATOR and run make command
+
+3. run ./emulator
+
+4. Memory MAP with contents dumped via txt file "RAM_DUMP.txt" 
 
 Memory map:
 	ROM
