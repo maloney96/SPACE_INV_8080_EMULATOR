@@ -1,0 +1,4 @@
+.vscode
+/invaders/*
+!/invaders/
+emulator

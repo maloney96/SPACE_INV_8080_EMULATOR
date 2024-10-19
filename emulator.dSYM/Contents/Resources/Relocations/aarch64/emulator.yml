@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/liam/Documents/School/osu_projects/cs467/SPACE_INV_8080_EMULATOR/SPACE_INV_8080_EMULATOR/emulator'
+relocations:     []
+...
