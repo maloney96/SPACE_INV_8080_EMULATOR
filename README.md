@@ -1,5 +1,21 @@
 # SPACE_INV_8080_EMULATOR
 
+### Disassembler
+
+1. Read current instructions from opcode buffer.
+
+2. Input current memory address for reference.
+
+3. Decode instruction based on opcode. 
+
+### Emulator
+
+1. Fetch the current instruction from memory.
+
+2. Disassemble instructions for debugging.
+
+3. Increment program counter and execute instructions. Return error if instruction unimplemented.
+
 ### Memory
 
 1. Place all invaders source files into the invaders folder..
