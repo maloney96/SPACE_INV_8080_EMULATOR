@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include "memory/memory.h"
 #include "memory/mem_utils.h"
+#include "disassembler/disassembler.h"
+#include "emulator/emulator.h"
+
 
 #define MEMORY_SIZE 0x10000 // 64KB total memory
 
