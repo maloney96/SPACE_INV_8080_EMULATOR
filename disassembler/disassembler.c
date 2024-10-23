@@ -339,8 +339,109 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xbf:
             printf("%s", cmp_cases[*code - 0xb8]);
             break; 
+        
+        // POP cases
+        case 0xc1:
+        case 0xd1:
+        case 0xe1:
+        case 0xf1:
+            printf("POP %s", 
+            (*code == 0xc1) ? "B" : (*code == 0xd1) ? "D" : (*code == 0xe1) ? "H" : "SP");
+            break;
+        
+        // PUSH cases
+        case 0xc5:
+        case 0xd5:
+        case 0xe5:
+        case 0xf5:
+            printf("PUSH %s", 
+            (*code == 0xc5) ? "B" : (*code == 0xd5) ? "D" : (*code == 0xe5) ? "H" : "SP");
+            break;
+        
+        // RST cases
+        case 0xc7:
+        case 0xcf:
+        case 0xd7:
+        case 0xdf:
+        case 0xe7:
+        case 0xef:
+        case 0xf7:
+        case 0xff:
+            printf("RST %s",
+            (*code == 0xc7) ? "0" : (*code == 0xcf) ? "1" : (*code == 0xd7) ? "2" : (*code == 0xdf) ? "3" : 
+            (*code == 0xe7) ? "4" : (*code == 0xef) ? "5" : (*code == 0xf7) ? "6" : "7");
+            break;
+        
+        // Cases printing code[2], code[1] and setting opbytes to 3
+        case 0xc2:
+        case 0xc3:
+        case 0xc4:
+        case 0xca:
+        case 0xcb:
+        case 0xcc:
+        case 0xcd:
+        case 0xd2:
+        case 0xd4:
+        case 0xda:
+        case 0xdc:
+        case 0xdd:
+        case 0xe2:
+        case 0xe4:
+        case 0xea:
+        case 0xec:
+        case 0xed:
+        case 0xf2:
+        case 0xf4:
+        case 0xfa:
+        case 0xfc:
+        case 0xfd:
+            printf("%s $%02x%02x", 
+            (*code == 0xc2) ? "JNZ" : (*code == 0xc3) ? "JMP" : (*code == 0xc4) ? "CNZ" : (*code == 0xca) ? "JZ" :
+            (*code == 0xcb) ? "JMP" : (*code == 0xcc) ? "CZ" : (*code == 0xcd) ? "CALL" : (*code == 0xd2) ? "JNC" :
+            (*code == 0xd4) ? "CNC" : (*code == 0xda) ? "JC" : (*code == 0xdc) ? "CC" : (*code == 0xdd) ? "CALL" :
+            (*code == 0xe2) ? "JPO" : (*code == 0xe4) ? "CPO" : (*code == 0xea) ? "JPE" : (*code == 0xec) ? "CPE" :
+            (*code == 0xed) ? "CALL" : (*code == 0xf2) ? "JP" : (*code == 0xf4) ? "CP" : (*code == 0xfa) ? "JM" :
+            (*code == 0xfc) ? "CM" : "CALL",
+            code[2], code[1]);
+            opbytes = 3;
+            break;
+        
+        // Cases printing code[1] and setting opbytes to 2
+        case 0xc6:
+        case 0xce:
+        case 0xd3:
+        case 0xd6:
+        case 0xdb:
+        case 0xde:
+        case 0xe6:
+        case 0xee:
+        case 0xf6:
+        case 0xfe:
+            printf("%s $%02x", 
+            (*code == 0xc6) ? "ADI" : (*code == 0xce) ? "ACI" : (*code == 0xd3) ? "OUT" : (*code == 0xd6) ? "SUI" :
+            (*code == 0xdb) ? "IN" : (*code == 0xde) ? "SBI" : (*code == 0xe6) ? "ANI" : (*code == 0xee) ? "XRI" :
+            (*code == 0xf6) ? "ORI" : "CPI",
+            code[1]);
+            opbytes = 2;
+            break;
 
-        //add more cases from 0xc0 and onwards...
+        // One-off cases between 0xc0 - 0xff:
+        case 0xc0: printf("RNZ"); break;
+        case 0xc8: printf("RZ"); break;
+		case 0xc9: printf("RET"); break;
+        case 0xd0: printf("RNC"); break;
+        case 0xd8: printf("RC");  break;
+		case 0xd9: printf("RET"); break;
+        case 0xe0: printf("RPO"); break;
+        case 0xe3: printf("XTHL"); break;
+        case 0xe8: printf("RPE"); break;
+		case 0xe9: printf("PCHL"); break;
+        case 0xeb: printf("XCHG"); break;
+        case 0xf0: printf("RP");  break;
+        case 0xf3: printf("DI");  break;
+        case 0xf8: printf("RM");  break;
+		case 0xf9: printf("SPHL"); break;
+        case 0xfb: printf("EI");  break;
     }
 
     return opbytes;
