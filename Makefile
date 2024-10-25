@@ -11,7 +11,7 @@ SRCS = main.c memory/memory.c memory/mem_utils.c disassembler/disassembler.c emu
 OBJS = $(SRCS:.c=.o)
 
 # Executable name
-TARGET = emulator
+TARGET = 8080_emulator
 
 # Default target
 all: $(TARGET)

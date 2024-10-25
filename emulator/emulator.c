@@ -16,6 +16,18 @@ void unimplemented_instruction(state_8080cpu *state) {
     exit(EXIT_FAILURE);
 };
 
+int parity(int x, int size) {
+	int i;
+	int p = 0;
+	x = (x & ((1<<size)-1));
+	for (i=0; i<size; i++)
+	{
+		if (x & 0x1) p++;
+		x = x >> 1;
+	}
+	return (0 == (p & 0x1));
+};
+ 
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state) {
     uint32_t hl = (state->h << 8) | state->l;
     uint32_t reg_pair = (reg_h << 8) | reg_l;

@@ -5,18 +5,7 @@
 #include <stdint.h>
 #include "../disassembler/disassembler.h"
 
-int parity(int x, int size)
-{
-	int i;
-	int p = 0;
-	x = (x & ((1<<size)-1));
-	for (i=0; i<size; i++)
-	{
-		if (x & 0x1) p++;
-		x = x >> 1;
-	}
-	return (0 == (p & 0x1));
-}
+int parity(int x, int size);
 
 void unimplemented_instruction(state_8080cpu *state);
 
