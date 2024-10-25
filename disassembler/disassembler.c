@@ -130,7 +130,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x2e:
         case 0x36:
         case 0x3e:
-            printf("MVI %s,#$%02x%02x",
+            printf("MVI %s,#$%02x",
             (*code == 0x06) ? "B" : (*code == 0x0e) ? "C" : (*code == 0x16) ? "D" : (*code == 0x1e) ? "E" : 
             (*code == 0x26) ? "H" : (*code == 0x2e) ? "L" : (*code == 0x36) ? "M" : "SP",
             code[1]);
