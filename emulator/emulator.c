@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "emulator.h"
-#include "disassembler/disassembler.h"
+#include "../disassembler/disassembler.h"
 
 void unimplemented_instruction(state_8080cpu *state) {
     state->pc--; // Undo PC increment
@@ -147,14 +147,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 			break;
 
         // MOV cases
-        case 0x56: handleMOVwithMemory(&state->d, state, 0); break; // MOV D, M
-        case 0x5e: handleMOVwithMemory(&state->e, state, 0); break; // MOV E, M
-        case 0x66: handleMOVwithMemory(&state->h, state, 0); break; // MOV H, M
+        case 0x56: handle_MOVwithMemory(&state->d, state, 0); break; // MOV D, M
+        case 0x5e: handle_MOVwithMemory(&state->e, state, 0); break; // MOV E, M
+        case 0x66: handle_MOVwithMemory(&state->h, state, 0); break; // MOV H, M
         case 0x6f: state->l = state->a; break;      // MOV L, A
         case 0x7a: state->a  = state->d;  break;	// MOV A, D
 		case 0x7b: state->a  = state->e;  break;	// MOV A, E
 		case 0x7c: state->a  = state->h;  break;	// MOV A, H
-        case 0x77: handleMOVwithMemory(&state->a, state, 1); break; // MOV A, M
+        case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV A, M
 
         // Add more cases...
 

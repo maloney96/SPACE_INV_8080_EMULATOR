@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "disassembler/disassembler.h"
+#include "../disassembler/disassembler.h"
 
 int parity(int x, int size)
 {
