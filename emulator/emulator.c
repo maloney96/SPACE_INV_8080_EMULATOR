@@ -62,7 +62,7 @@ void handle_POP(uint8_t  *high, uint8_t *low, state_8080cpu *state) {
     state->sp += 2;
 };
 
-void handle_PUSH(uint8_t *high, uint8_t *low, state_8080cpu *state) {
+void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
     state->sp -= 2;
@@ -269,7 +269,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xe6:
             {
                 state->a = state->a & opcode[1];
-                LogicFlagsA(state);
+                logic_flags_A(state);
                 state->pc++;
 			}
 			break;
