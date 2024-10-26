@@ -5,13 +5,13 @@ CC = clang
 CFLAGS = -g 
 
 # Source files
-SRCS = main.c memory/memory.c memory/mem_utils.c
+SRCS = main.c memory/memory.c memory/mem_utils.c disassembler/disassembler.c emulator/emulator.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
 
 # Executable name
-TARGET = emulator
+TARGET = 8080_emulator
 
 # Default target
 all: $(TARGET)
