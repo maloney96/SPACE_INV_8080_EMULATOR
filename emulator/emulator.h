@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef EMULATOR_H
 #define EMULATOR_H
 
@@ -30,3 +34,7 @@ void logic_flags_A(state_8080cpu *state);
 int emulate_8080cpu(state_8080cpu *state);
 
 #endif // EMULATOR_H
+
+#ifdef __cplusplus
+}
+#endif
