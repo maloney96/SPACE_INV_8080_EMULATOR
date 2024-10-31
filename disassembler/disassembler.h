@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef DISASSEMBLER_H
 #define DISASSEMBLER_H
 
@@ -31,3 +35,7 @@ typedef struct state_8080cpu {
 int disassemble_opcode(unsigned char *opcodebuffer, int pc);
 
 #endif // DISASSEMBLER_H
+
+#ifdef __cplusplus
+}
+#endif
