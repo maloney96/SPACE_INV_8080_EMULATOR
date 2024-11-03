@@ -25,7 +25,7 @@ set(PROJECT_SOURCES
         ui/settings.h ui/settings.cpp ui/settings.ui
         ui/setkeydialog.h ui/setkeydialog.cpp ui/setkeydialog.ui
         ui/glwidget.h ui/glwidget.cpp
-        emulator/emulatorWrapper.cpp emulator/emulatorWrapper.h emulator/t_ioports.h emulator/io_bits.h
+        emulator/emulatorWrapper.cpp emulator/emulatorWrapper.h emulator/t_ioports.h emulator/io_bits.h emulator/emulator.h
         outputmanager/outputManager.cpp outputmanager/outputManager.h
         emulator/emulator.c emulator/emulatorWrapper.h
         memory/memory.h memory/memory.c memory/mem_utils.h memory/mem_utils.c
