@@ -25,18 +25,17 @@ set(PROJECT_SOURCES
         ui/settings.h ui/settings.cpp ui/settings.ui
         ui/setkeydialog.h ui/setkeydialog.cpp ui/setkeydialog.ui
         ui/glwidget.h ui/glwidget.cpp
+        emulator/emulatorWrapper.cpp emulator/emulatorWrapper.h emulator/t_ioports.h emulator/io_bits.h
+        outputmanager/outputManager.cpp outputmanager/outputManager.h
+        emulator/emulator.c emulator/emulatorWrapper.h
+        memory/memory.h memory/memory.c memory/mem_utils.h memory/mem_utils.c
+        disassembler/disassembler.c disassembler/disassembler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SpaceInvadersEmulator
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        images/Celestial.png images/spcaeSky.jpg
-        resources.qrc
-        inputmanager/inputManager.cpp inputmanager/inputManager.h inputmanager/keymap.h
-        ui/instructions.cpp ui/instructions.h ui/instructions.ui ui/mainwindow.cpp ui/mainwindow.h ui/mainwindow.ui
-        emulator/emulatorWrapper.cpp emulator/emulatorWrapper.h emulator/t_ioports.h emulator/io_bits.h
-        outputmanager/outputManager.cpp outputmanager/outputManager.h
     )
 
 # Define target properties for Android with Qt 6 as:
