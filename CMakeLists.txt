@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(SpaceInvadersEmulator VERSION 0.1 LANGUAGES CXX)
+project(SpaceInvadersEmulator VERSION 0.1 LANGUAGES CXX C)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
