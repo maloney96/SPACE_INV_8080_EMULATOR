@@ -30,7 +30,14 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     qDebug() << "EmulatorWrapper Created";
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
+    //This works, so ram is definitely being loaded properly
+    print_ram_contents(ram->mem, ram->size, "ramdump.txt");
+    qDebug() << "Dumped ram contents to ramdump.txt";
+    /* TODO: This crashes the program...
+    state->memory = ram->mem;
+     */
 }
+
 
 // Destructor
 EmulatorWrapper::~EmulatorWrapper() {
@@ -40,6 +47,11 @@ EmulatorWrapper::~EmulatorWrapper() {
 // This is where most of the emulator loop logic should go
 // Currently there's just a dummy function in there
 void EmulatorWrapper::runCycle() {
+    /* TODO: Can't run this yet because we need to properly assign the 'memory' property of 'state'
+    emulate_8080cpu(state);
+     */
+
+    //Just running dummy port reader for now
     dummyIOportReader();
 }
 
@@ -47,8 +59,7 @@ void EmulatorWrapper::runCycle() {
 void EmulatorWrapper::startEmulation() {
     running = true;
     auto wait_time = std::chrono::nanoseconds(4000000);
-
-
+    qDebug() << "Starting emulation...";
     while (running) {
         runCycle();  // Run one cycle of the CPU
         // This is just to slow down the clock cycle to something like the 8080 for testing

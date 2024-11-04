@@ -9,6 +9,9 @@
 #include <QDebug>
 #include "t_ioports.h"
 #include "../memory/memory.h"
+#include "../disassembler/disassembler.h"
+#include "../emulator/emulator.h"
+#include "../memory/mem_utils.h"
 
 class EmulatorWrapper : public QObject  // Inherit from QObject
 {
@@ -46,7 +49,9 @@ private:
 
     void dummyIOportReader();
 
-    mem_block_t *ram{};
+    mem_block_t *ram;
+
+    state_8080cpu *state;
 };
 
 #endif // EMULATORWRAPPER_H
