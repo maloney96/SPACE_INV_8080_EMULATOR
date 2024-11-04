@@ -46,8 +46,8 @@ EmulatorWrapper::~EmulatorWrapper() {
 // This is where most of the emulator loop logic should go
 // Currently there's just a dummy function in there
 void EmulatorWrapper::runCycle() {
-    /* TODO: Can't run this yet because we need to properly assign the 'memory' property of 'state'
-    emulate_8080cpu(state);
+    /* TODO: This still crashes the program
+    emulate_8080cpu(&state);
      */
 
     //Just running dummy port reader for now
