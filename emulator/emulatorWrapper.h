@@ -51,7 +51,7 @@ private:
 
     mem_block_t *ram;
 
-
+    state_8080cpu state;
 };
 
 #endif // EMULATORWRAPPER_H
