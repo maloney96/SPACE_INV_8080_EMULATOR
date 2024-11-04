@@ -25,7 +25,7 @@ EmulatorWrapper& EmulatorWrapper::getInstance() {
 // Private constructor
 EmulatorWrapper::EmulatorWrapper() : running(false) {
     // Constructor body
-    EmulatorWrapper::memory = create_mem_block(MEMORY_SIZE);
+    EmulatorWrapper::ram = create_mem_block(MEMORY_SIZE);
     qDebug() << "EmulatorWrapper Created";
 }
 

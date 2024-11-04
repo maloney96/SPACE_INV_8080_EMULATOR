@@ -46,7 +46,7 @@ private:
 
     void dummyIOportReader();
 
-    mem_block_t *memory{};
+    mem_block_t *ram{};
 };
 
 #endif // EMULATORWRAPPER_H
