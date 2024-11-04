@@ -46,18 +46,13 @@ EmulatorWrapper::~EmulatorWrapper() {
 // This is where most of the emulator loop logic should go
 // Currently there's just a dummy function in there
 void EmulatorWrapper::runCycle() {
-    /* TODO: This still crashes the program
     emulate_8080cpu(&state);
-     */
-
-    //Just running dummy port reader for now
-    dummyIOportReader();
 }
 
 // Function to start the emulator loop
 void EmulatorWrapper::startEmulation() {
     running = true;
-    auto wait_time = std::chrono::nanoseconds(4000000);
+    auto wait_time = std::chrono::nanoseconds(100000);
     qDebug() << "Starting emulation...";
     while (running) {
         runCycle();  // Run one cycle of the CPU
