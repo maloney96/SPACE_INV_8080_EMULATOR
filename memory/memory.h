@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef MEMORY_H
 #define MEMORY_H
 
@@ -15,3 +19,7 @@ mem_block_t *create_mem_block(int size);
 void load_rom(mem_block_t *mem, const char *file_name);
 
 #endif // MEMORY_H
+
+#ifdef __cplusplus
+}
+#endif
