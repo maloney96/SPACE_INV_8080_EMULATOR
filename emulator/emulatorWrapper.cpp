@@ -104,5 +104,7 @@ void EmulatorWrapper::dummyIOportReader() {
     if (ioports.read02 & CINFO) {
         iostate.append("CINFO ");
     }
-    qDebug() << iostate;
+    if (!iostate.empty()){
+        qDebug() << iostate;
+    }
 }
