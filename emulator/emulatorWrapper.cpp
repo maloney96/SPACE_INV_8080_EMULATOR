@@ -31,6 +31,8 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
     state.memory = ram->mem;
+    state.pc = 0;
+    state.sp = 0;
 }
 
 
