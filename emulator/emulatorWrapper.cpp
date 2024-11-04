@@ -33,9 +33,8 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     //This works, so ram is definitely being loaded properly
     print_ram_contents(ram->mem, ram->size, "ramdump.txt");
     qDebug() << "Dumped ram contents to ramdump.txt";
-    /* TODO: This crashes the program...
-    state->memory = ram->mem;
-     */
+    state.memory = ram->mem;
+    print_ram_contents(state.memory, MEMORY_SIZE, "ramdump.txt");
 }
 
 
