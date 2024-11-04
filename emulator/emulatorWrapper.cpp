@@ -9,6 +9,7 @@
 #include <thread>
 #include <chrono>
 #include <string>
+#include <unistd.h>
 
 #define MEMORY_SIZE 0x10000 // 64KB total memory
 
@@ -27,6 +28,8 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     // Constructor body
     EmulatorWrapper::ram = create_mem_block(MEMORY_SIZE);
     qDebug() << "EmulatorWrapper Created";
+    load_rom(ram, "invaders.rom");
+    qDebug() << "ROM Loaded";
 }
 
 // Destructor
