@@ -241,7 +241,6 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
 	case 0x7d:
 	case 0x7e:
 	case 0x7f:
-            // TODO: fix move case display. Causes crashes.
             printf("%s", mov_cases[*code - 0x40]);
             break;
 
