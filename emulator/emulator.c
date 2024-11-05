@@ -182,10 +182,11 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x5e: handle_MOVwithMemory(&state->e, state, 0); break; // MOV E, M
         case 0x66: handle_MOVwithMemory(&state->h, state, 0); break; // MOV H, M
         case 0x6f: state->l = state->a; break;      // MOV L, A
-        case 0x7a: state->a  = state->d;  break;	// MOV A, D
-		case 0x7b: state->a  = state->e;  break;	// MOV A, E
-		case 0x7c: state->a  = state->h;  break;	// MOV A, H
-        case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV A, M
+        case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV M, A
+        case 0x7a: state->a = state->d; break;	    // MOV D, A
+		case 0x7b: state->a = state->e; break;	    // MOV E, A
+		case 0x7c: state->a = state->h; break;	    // MOV H, A
+        case 0x7e: handle_MOVwithMemory(&state->a, state, 0); break; // MOV A, M
 
         // ANA case
         case 0xa7:                                                  // ANA A
@@ -315,7 +316,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // Otherwise, treat as unimplemented instruction
         default:
-            unimplemented_instruction(state);
+                unimplemented_instruction(state);
             break;
         
         

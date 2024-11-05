@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/Images">
+        <file>images/Celestial.png</file>
+        <file>images/spcaeSky.jpg</file>
+        <file>images/Wisdom.png</file>
+    </qresource>
+</RCC>

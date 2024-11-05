@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SetKeyDialog</class>
+ <widget class="QDialog" name="SetKeyDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>251</width>
+    <height>92</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Set Key: Action</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-image: url(:/Images/images/spcaeSky.jpg);</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="currentKeyLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(170, 0, 0);
+font: 900 9pt &quot;Segoe UI&quot;;</string>
+     </property>
+     <property name="text">
+      <string>Current key: [Key]</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="instructionLabel">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(170, 0, 0);
+font: 900 9pt &quot;Segoe UI&quot;;</string>
+     </property>
+     <property name="text">
+      <string>Press any key to reassign the action...</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="cancelButton">
+     <property name="focusPolicy">
+      <enum>Qt::FocusPolicy::NoFocus</enum>
+     </property>
+     <property name="contextMenuPolicy">
+      <enum>Qt::ContextMenuPolicy::NoContextMenu</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(170, 0, 0);
+background-color: rgb(0, 0, 255);</string>
+     </property>
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
