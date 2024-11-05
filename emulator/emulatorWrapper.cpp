@@ -9,7 +9,7 @@
 #include <thread>
 #include <chrono>
 #include <string>
-#include <unistd.h>
+
 
 #define MEMORY_SIZE 0x10000 // 64KB total memory
 
@@ -49,12 +49,9 @@ void EmulatorWrapper::runCycle() {
 // Function to start the emulator loop
 void EmulatorWrapper::startEmulation() {
     running = true;
-    auto wait_time = std::chrono::nanoseconds(100000);
     qDebug() << "Starting emulation...";
     while (running) {
         runCycle();  // Run one cycle of the CPU
-        // This is just to slow down the clock cycle to something like the 8080 for testing
-        std::this_thread::sleep_for(wait_time);
     }
 }
 
