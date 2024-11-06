@@ -7,6 +7,7 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../emulator/ioports_t.h"
 
 typedef struct condition_codes {    
     uint8_t    z:1;    // Zero flag
@@ -30,6 +31,7 @@ typedef struct state_8080cpu {
     uint8_t    *memory;     // Pointer to 64KB memory block    
     condition_codes cc;     // Condition Codes (status flags)
     uint8_t     int_enable; // Interrupt Enable/Disable flag
+    ioports_t   ioports;   // Input/ouput ports
 } state_8080cpu;
 
 int disassemble_opcode(unsigned char *opcodebuffer, int pc);

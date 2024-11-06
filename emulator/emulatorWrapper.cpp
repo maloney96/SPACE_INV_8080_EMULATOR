@@ -4,7 +4,6 @@
 
 
 #include "../emulator/emulatorWrapper.h"
-#include "./t_ioports.h"
 #include "./io_bits.h"
 #include <thread>
 #include <chrono>
@@ -30,9 +29,21 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     qDebug() << "EmulatorWrapper Created";
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
+
+    //Initialize state and ioports
     state.memory = ram->mem;
     state.pc = 0;
     state.sp = 0;
+    //The first two inputs have register bits that are always 'on'
+    state.ioports.read00 = 0b00001110;
+    state.ioports.read01 = 0b00001000;
+    state.ioports.read02 = 0;
+    state.ioports.read03 = 0;
+    state.ioports.write02 = 0;
+    state.ioports.write03 = 0;
+    state.ioports.write04 = 0;
+    state.ioports.write05 = 0;
+    state.ioports.write06 = 0;
 }
 
 
@@ -41,9 +52,15 @@ EmulatorWrapper::~EmulatorWrapper() {
     qDebug() << "EmulatorWrapper destroyed";
 }
 
+// Return pointer to ioports
+ioports_t* EmulatorWrapper::getIOptr() {
+    return &EmulatorWrapper::state.ioports;
+}
+
 // This is where most of the emulator loop logic should go
 void EmulatorWrapper::runCycle() {
     emulate_8080cpu(&state);
+    //dummyIOportReader();
 }
 
 // Function to start the emulator loop
@@ -61,47 +78,47 @@ void EmulatorWrapper::dummyIOportReader() {
 
     std::string iostate = "";
 
-    if (ioports.read01 & CREDIT) {
+    if (state.ioports.read01 & CREDIT) {
         iostate.append("CREDIT ");
     }
-    if (ioports.read01 & P2START) {
+    if (state.ioports.read01 & P2START) {
         iostate.append("P2START ");
     }
-    if (ioports.read01 & P1START) {
+    if (state.ioports.read01 & P1START) {
         iostate.append("P1START ");
     }
-    if (ioports.read01 & P1SHOT) {
+    if (state.ioports.read01 & P1SHOT) {
         iostate.append("P1SHOT ");
     }
-    if (ioports.read01 & P1LEFT) {
+    if (state.ioports.read01 & P1LEFT) {
         iostate.append("P1LEFT ");
     }
-    if (ioports.read01 & P1RIGHT) {
+    if (state.ioports.read01 & P1RIGHT) {
         iostate.append("P1RIGHT ");
     }
     // READ02
-    if (ioports.read02 & DIPSW3) {
+    if (state.ioports.read02 & DIPSW3) {
         iostate.append("DIPSW3 ");
     }
-    if (ioports.read02 & DIPSW5) {
+    if (state.ioports.read02 & DIPSW5) {
         iostate.append("DIPSW5 ");
     }
-    if (ioports.read02 & TILT) {
+    if (state.ioports.read02 & TILT) {
         iostate.append("TILT ");
     }
-    if (ioports.read02 & DIPSW6) {
+    if (state.ioports.read02 & DIPSW6) {
         iostate.append("DIPSW6 ");
     }
-    if (ioports.read02 & P2SHOT) {
+    if (state.ioports.read02 & P2SHOT) {
         iostate.append("P2SHOT ");
     }
-    if (ioports.read02 & P2LEFT) {
+    if (state.ioports.read02 & P2LEFT) {
         iostate.append("P2LEFT ");
     }
-    if (ioports.read02 & P2RIGHT) {
+    if (state.ioports.read02 & P2RIGHT) {
         iostate.append("P2RIGHT ");
     }
-    if (ioports.read02 & CINFO) {
+    if (state.ioports.read02 & CINFO) {
         iostate.append("CINFO ");
     }
     if (!iostate.empty()){
