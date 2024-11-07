@@ -7,7 +7,7 @@
 
 #include <QObject>  // Include QObject for threading
 #include <QDebug>
-#include "t_ioports.h"
+#include "ioports_t.h"
 #include "../memory/memory.h"
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
@@ -26,8 +26,8 @@ public:
     EmulatorWrapper(const EmulatorWrapper&) = delete;
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
-    // Interrupts for other classes to manipulate
-    t_ioports ioports;
+
+    ioports_t* getIOptr();
 
 public slots:
     void startEmulation();

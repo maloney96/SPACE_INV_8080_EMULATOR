@@ -13,7 +13,7 @@
 
 #include <QObject>  // Include QObject for threading
 #include <QDebug>
-#include "../emulator/t_ioports.h"
+#include "../emulator/ioports_t.h"
 
 class InputManager : public QObject  // Inherit from QObject
 {
@@ -21,7 +21,7 @@ class InputManager : public QObject  // Inherit from QObject
 
 public:
     // Pointer to interrupts in emulator
-    t_ioports* ioports_ptr {nullptr};
+    ioports_t* ioports_ptr {nullptr};
 
     // Static method to get the singleton instance
     static InputManager& getInstance();

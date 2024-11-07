@@ -225,7 +225,7 @@ void MainWindow::onButtonPlayClicked()
         emulatorWrapperThread.start();  // Start the thread
 
         inputManager = &InputManager::getInstance();  // Get the singleton instance
-        inputManager->ioports_ptr = &emulatorWrapper->ioports; // Input manager needs to manipulate interrupts
+        inputManager->ioports_ptr = emulatorWrapper->getIOptr(); // Input manager needs to manipulate io ports
         inputManager->moveToThread(&inputManagerThread);  // Move InputManager to its own thread
         inputManagerThread.start();  // Start the thread
         isGameRunning = true;  // Set game running flag
