@@ -225,6 +225,31 @@ int emulate_8080cpu(state_8080cpu *state) {
 				state->pc += 2;
 			break;
 		
+        // JZ case
+        case 0xca:
+            if (1 == state->cc.z)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
+        // JC case
+        case 0xda:
+            if (1 == state->cc.cy)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
+
+        // JNC case
+        case 0xd2:
+            if (0 == state->cc.cy)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
         // JMP case
         case 0xc3: state->pc = (opcode[2] << 8) | opcode[1]; break;
 
@@ -325,10 +350,28 @@ int emulate_8080cpu(state_8080cpu *state) {
     printf("\t");
     
     // Print Register Values and Flags
-    printf("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c\n",
+    printf("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
        state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
        state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.', 
-       state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.');
+       state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
 
     return 0;
 };
+
+void generateInterrupt(state_8080cpu* state, int interrupt_num)
+{
+
+    printf("Generating interrupt %d\n", interrupt_num);
+
+    //perform "PUSH PC"
+    printf("Pushing Program Counter: %04x\n", state->pc);
+    state->memory[state->sp] = state->pc << 8;
+    state->sp -= 1;
+    state->memory[state->sp] = state->pc >> 8;
+    state->sp -= 1;
+
+    //Set the PC to the low memory vector.
+    //This is identical to an "RST interrupt_num" instruction.
+    state->pc = 8 * interrupt_num;
+
+}

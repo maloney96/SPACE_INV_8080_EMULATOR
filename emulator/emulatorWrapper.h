@@ -52,6 +52,10 @@ private:
     mem_block_t *ram;
 
     state_8080cpu state;
+
+    std::chrono::high_resolution_clock::time_point previous_timepoint;
+
+    uint8_t interrupt_toggle;
 };
 
 #endif // EMULATORWRAPPER_H
