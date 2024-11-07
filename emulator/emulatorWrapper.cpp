@@ -10,10 +10,9 @@
 #include <string>
 
 
-#define INTERRUPT_DURATION auto 16666667;
-
-
+#define INTERRUPT_INTERVAL 8333333
 #define MEMORY_SIZE 0x10000 // 64KB total memory
+#define NANOSECONDS_PER_CYCLE 500
 
 EmulatorWrapper* EmulatorWrapper::instance = nullptr;
 
@@ -73,13 +72,14 @@ void EmulatorWrapper::runCycle() {
 
     auto current_timepoint = std::chrono::high_resolution_clock::now();
 
-    if (  (current_timepoint - EmulatorWrapper::previous_timepoint) > std::chrono::nanoseconds(16670000))  //1/60 second has elapsed
+    if (  (current_timepoint - EmulatorWrapper::previous_timepoint) > std::chrono::nanoseconds(INTERRUPT_INTERVAL))  // 1/120 second has elapsed
     {
         //only do an interrupt if they are enabled
         if (state.int_enable)
         {
             int interrupt_num = interrupt_toggle + 1;
             generateInterrupt(&state, interrupt_num);    //interrupt 1 or 2 depending on state of toggle
+            state.int_enable = false;
 
             //Save the time we did this and toggle the interrupt so the other is triggered next time
             previous_timepoint = current_timepoint;
@@ -88,7 +88,7 @@ void EmulatorWrapper::runCycle() {
     };
 
     //TODO: This is a placeholder for more accurate simulation of how much time the last opcode consumed
-    std::this_thread::sleep_for(std::chrono::nanoseconds(4000));
+    std::this_thread::sleep_for(std::chrono::nanoseconds(NANOSECONDS_PER_CYCLE * 4));
 
 }
 
