@@ -332,3 +332,19 @@ int emulate_8080cpu(state_8080cpu *state) {
 
     return 0;
 };
+
+void generateInterrupt(state_8080cpu* state, int interrupt_num)
+{
+    //perform "PUSH PC"
+    uint8_t psw = 0;
+    psw |= (state->pc & 0xFF00) >> 8;
+    psw |= (state->pc & 0xff);
+    state->memory[state->sp - 2] = psw;
+    state->sp -= 2;
+
+    //Set the PC to the low memory vector.
+    //This is identical to an "RST interrupt_num" instruction.
+    state->pc = 8 * interrupt_num;
+
+    printf("Generated interrupt %d\n", interrupt_num);
+}

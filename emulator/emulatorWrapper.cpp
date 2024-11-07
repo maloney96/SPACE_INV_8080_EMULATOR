@@ -10,6 +10,9 @@
 #include <string>
 
 
+#define INTERRUPT_DURATION auto 16666667;
+
+
 #define MEMORY_SIZE 0x10000 // 64KB total memory
 
 EmulatorWrapper* EmulatorWrapper::instance = nullptr;
@@ -29,6 +32,11 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     qDebug() << "EmulatorWrapper Created";
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
+
+    // Initialize timer for tripping interrupts
+    EmulatorWrapper::previous_timepoint = std::chrono::high_resolution_clock::now();
+    // We toggle this to simulate the alternation 'middle of screen' and 'end of screen' interrupts
+    EmulatorWrapper::interrupt_toggle = 0; //0 = middle of screen, 1= bottom of screen
 
     //Initialize state and ioports
     state.memory = ram->mem;
@@ -59,8 +67,29 @@ ioports_t* EmulatorWrapper::getIOptr() {
 
 // This is where most of the emulator loop logic should go
 void EmulatorWrapper::runCycle() {
+
     emulate_8080cpu(&state);
     //dummyIOportReader();
+
+    auto current_timepoint = std::chrono::high_resolution_clock::now();
+
+    if (  (current_timepoint - EmulatorWrapper::previous_timepoint) > std::chrono::nanoseconds(16670000))  //1/60 second has elapsed
+    {
+        //only do an interrupt if they are enabled
+        if (state.int_enable)
+        {
+            int interrupt_num = interrupt_toggle + 1;
+            generateInterrupt(&state, interrupt_num);    //interrupt 1 or 2 depending on state of toggle
+
+            //Save the time we did this and toggle the interrupt so the other is triggered next time
+            previous_timepoint = current_timepoint;
+            interrupt_toggle ^= 1;
+        }
+    };
+
+    //TODO: This is a placeholder for more accurate simulation of how much time the last opcode consumed
+    std::this_thread::sleep_for(std::chrono::nanoseconds(4000));
+
 }
 
 // Function to start the emulator loop
@@ -125,3 +154,4 @@ void EmulatorWrapper::dummyIOportReader() {
         qDebug() << iostate;
     }
 }
+

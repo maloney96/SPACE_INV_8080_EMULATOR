@@ -33,6 +33,8 @@ void logic_flags_A(state_8080cpu *state);
 
 int emulate_8080cpu(state_8080cpu *state);
 
+void generateInterrupt(state_8080cpu *state, int interrupt_num);
+
 #endif // EMULATOR_H
 
 #ifdef __cplusplus
