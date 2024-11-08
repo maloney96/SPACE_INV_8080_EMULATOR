@@ -5,6 +5,41 @@
 #include "emulator.h"
 #include "../disassembler/disassembler.h"
 
+const uint8_t cycles_8080[256] = {
+    4, 10, 7, 5, 5, 7, 4, 4,  // 0x00 - 0x07
+    3, 10, 7, 5, 5, 7, 4, 4,  // 0x08 - 0x0F
+    4, 10, 7, 5, 5, 7, 4, 4,  // 0x10 - 0x17
+    3, 10, 7, 5, 5, 7, 4, 4,  // 0x18 - 0x1F
+    4, 10, 7, 5, 5, 7, 4, 4,  // 0x20 - 0x27
+    3, 10, 7, 5, 5, 7, 4, 4,  // 0x28 - 0x2F
+    4, 10, 7, 5, 5, 7, 4, 4,  // 0x30 - 0x37
+    3, 10, 7, 5, 5, 7, 4, 4,  // 0x38 - 0x3F
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x40 - 0x47
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x48 - 0x4F
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x50 - 0x57
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x58 - 0x5F
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x60 - 0x67
+    4, 4, 4, 4, 4, 4, 4, 4,  // 0x68 - 0x6F
+    7, 7, 7, 7, 7, 7, 7, 7,  // 0x70 - 0x77
+    7, 7, 7, 7, 7, 7, 7, 7,  // 0x78 - 0x7F
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0x80 - 0x87
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0x88 - 0x8F
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0x90 - 0x97
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0x98 - 0x9F
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0xA0 - 0xA7
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0xA8 - 0xAF
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0xB0 - 0xB7
+    5, 5, 5, 5, 5, 5, 5, 5,  // 0xB8 - 0xBF
+    7, 10, 10, 10, 11, 11, 7, 7,  // 0xC0 - 0xC7
+    7, 10, 10, 18, 11, 11, 7, 7,  // 0xC8 - 0xCF
+    7, 10, 10, 10, 17, 17, 7, 7,  // 0xD0 - 0xD7
+    7, 10, 10, 18, 17, 17, 7, 7,  // 0xD8 - 0xDF
+    7, 10, 10, 10, 11, 11, 7, 7,  // 0xE0 - 0xE7
+    7, 5, 10, 18, 11, 11, 7, 7,  // 0xE8 - 0xEF
+    7, 10, 10, 10, 17, 17, 7, 7,  // 0xF0 - 0xF7
+    7, 10, 10, 18, 17, 17, 7, 7   // 0xF8 - 0xFF
+};
+
 void unimplemented_instruction(state_8080cpu *state) {
     state->pc--; // Undo PC increment
 
@@ -88,8 +123,8 @@ void logic_flags_A(state_8080cpu *state) {
 };
 
 int emulate_8080cpu(state_8080cpu *state) {
-    int cycles = 4;
 	unsigned char *opcode = &state->memory[state->pc];
+    int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
 
 	disassemble_opcode(state->memory, state->pc);
 	
@@ -355,7 +390,7 @@ int emulate_8080cpu(state_8080cpu *state) {
        state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.', 
        state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
 
-    return 0;
+    return cycles;
 };
 
 void generateInterrupt(state_8080cpu* state, int interrupt_num)
