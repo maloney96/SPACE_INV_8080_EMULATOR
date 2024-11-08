@@ -12,7 +12,7 @@
 
 #define INTERRUPT_INTERVAL 8333333
 #define MEMORY_SIZE 0x10000 // 64KB total memory
-#define NANOSECONDS_PER_CYCLE 500
+#define CPU_CLOCK_HZ 2000000 // 2 MHz clock speed
 
 EmulatorWrapper* EmulatorWrapper::instance = nullptr;
 
@@ -67,8 +67,12 @@ ioports_t* EmulatorWrapper::getIOptr() {
 // This is where most of the emulator loop logic should go
 void EmulatorWrapper::runCycle() {
 
-    emulate_8080cpu(&state);
+    int cycles = emulate_8080cpu(&state);
     //dummyIOportReader();
+
+    // Simulation of how much time the last opcode consumed (in microseconds)
+    int sleep_time = (cycles * 1000000) / CPU_CLOCK_HZ;
+    std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
 
     auto current_timepoint = std::chrono::high_resolution_clock::now();
 
@@ -86,10 +90,6 @@ void EmulatorWrapper::runCycle() {
             interrupt_toggle ^= 1;
         }
     };
-
-    //TODO: This is a placeholder for more accurate simulation of how much time the last opcode consumed
-    std::this_thread::sleep_for(std::chrono::nanoseconds(NANOSECONDS_PER_CYCLE * 4));
-
 }
 
 // Function to start the emulator loop

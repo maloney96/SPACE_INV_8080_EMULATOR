@@ -56,3 +56,8 @@ compile_commands.json
 /build/
 
 /invaders.rom
+
+/invaders
+RAM_DUMP.txt
+tasks.json
+.DS_Store
