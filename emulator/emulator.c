@@ -395,6 +395,20 @@ int emulate_8080cpu(state_8080cpu *state) {
         // JMP case
         case 0xc3: state->pc = (opcode[2] << 8) | opcode[1]; break;
 
+        // CC case
+        case 0xdc:
+            if (state->cc.cy != 0) {
+                uint16_t ret = state->pc+2;
+                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+                write_memory(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
+            else {
+                state->pc += 2;
+            }
+            break;
+
         // PUSH cases
         case 0xc5: handle_PUSH(state->b, state->c, state); break; // PUSH B
         case 0xd5: handle_PUSH(state->d, state->e, state); break; // PUSH D
