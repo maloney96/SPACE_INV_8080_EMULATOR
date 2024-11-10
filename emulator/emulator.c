@@ -63,6 +63,12 @@ void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
      state->memory[address] = value;
 };
 
+void flags_zerosignparity(state_8080cpu *state, uint8_t value) {
+    state->cc.z = (value == 0);
+    state->cc.s = (0x80 == (value & 0x80));
+    state->cc.p = parity(value, 8);
+};
+
 int parity(int x, int size) {
 	int i;
 	int p = 0;
@@ -343,6 +349,15 @@ int emulate_8080cpu(state_8080cpu *state) {
 				state->sp += 2;
 			}
 			break;
+
+        // ACI case
+        case 0xce:
+            uint16_t x = state->a + opcode[1] + state->cc.cy;
+            flags_zerosignparity(state, x&0xff);
+            state->cc.cy = (x > 0xff);
+            state->a = x & 0xff;
+            state->pc++;
+            break;
         
         // JNZ case
         case 0xc2:
