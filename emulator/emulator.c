@@ -63,10 +63,34 @@ void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
      state->memory[address] = value;
 };
 
+void flags_logicA(state_8080cpu *state) {
+    state->cc.cy = state->cc.ac = 0;
+    state->cc.z = (state->a == 0);
+    state->cc.s = (0x80 == (state->a & 0x80));;
+    state->cc.p = parity(state->a, 8);
+};
+
+void flags_arithA(state_8080cpu *state, uint16_t res) {
+    state->cc.cy = (res > 0xff);
+    state->cc.z = ((res&0xff) == 0);
+    state->cc.s = (0x80 == (res & 0x80));
+    state->cc.p = parity(res&0xff, 8);
+};
+
 void flags_zerosignparity(state_8080cpu *state, uint8_t value) {
     state->cc.z = (value == 0);
     state->cc.s = (0x80 == (value & 0x80));
     state->cc.p = parity(value, 8);
+};
+
+uint8_t read_HL(state_8080cpu *state) {
+    uint16_t offset = (state->h << 8) | state->l;
+    return state->memory[offset];
+};
+
+void write_HL(state_8080cpu *state, uint8_t value) {
+    uint16_t offset = (state->h << 8) | state->l;
+    write_memory(state, offset, value); 
 };
 
 int parity(int x, int size) {
