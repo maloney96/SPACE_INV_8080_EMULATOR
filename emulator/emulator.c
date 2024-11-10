@@ -51,6 +51,18 @@ void unimplemented_instruction(state_8080cpu *state) {
     exit(EXIT_FAILURE);
 };
 
+void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
+    if (address < 0x2000) {
+        printf("Writing ROM not allowed on %x\n", address);
+        return;
+     }
+     if (address >= 0x4000) {
+        printf("Writing out of Space Invaders ROM not allowed on %x\n", address);
+        return;
+     }
+     state->memory[address] = value;
+};
+
 int parity(int x, int size) {
 	int i;
 	int p = 0;
@@ -145,6 +157,16 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x31: // LXI SP, word
             state->sp = (opcode[2] << 8) | opcode[1]; 
             state->pc += 2; 
+            break;
+        
+        // STAX cases
+        case 0x02: // STAX B
+            uint16_t offset = (state->b<<8) | state->c;
+            write_memory(state, offset, state->a); 
+            break;
+        case 0x12:  // STAX D
+            uint16_t offset = (state->d<<8) | state->e;
+            write_memory(state, offset, state->a);
             break;
         
         // MVI cases
