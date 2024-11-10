@@ -222,6 +222,11 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x13: handle_INX(&state->d, &state->e); break; // INX D
         case 0x23: handle_INX(&state->h, &state->l); break; // INX H
 
+        // CMA case
+        case 0x2f:
+            state->a = ~state->a;
+            break;
+
         // STA case
         case 0x32:
             {
