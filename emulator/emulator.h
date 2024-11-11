@@ -29,9 +29,13 @@ void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state);
 
 void handle_DCR(uint8_t *reg, condition_codes *cc);
 
+void handle_DCX(uint8_t *high, uint8_t *low); 
+
 void handle_LXI(uint8_t *high, uint8_t *low, uint8_t *opcode, state_8080cpu *state);
 
 void handle_INX(uint8_t *high, uint8_t *low);
+
+void handle_INR(state_8080cpu *state, uint8_t *reg);
 
 void handle_MOVwithMemory(uint8_t *reg, state_8080cpu *state, int direction);
 
