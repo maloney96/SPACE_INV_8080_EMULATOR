@@ -396,6 +396,30 @@ int emulate_8080cpu(state_8080cpu *state) {
 				state->pc += 2;
 			break;
 		
+        // JNC case
+        case 0xd2:
+            if (0 == state->cc.cy)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
+        // JPO case
+        case 0xe2:
+            if (0 == state->cc.p)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
+        // JP case
+        case 0xf2:
+            if (0 == state->cc.s)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
+
         // JZ case
         case 0xca:
             if (1 == state->cc.z)
@@ -412,10 +436,17 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc += 2;
             break;
 
+        // JPE case
+        case 0xea:
+            if (1 == state->cc.p)
+                state->pc = (opcode[2] << 8) | opcode[1];
+            else
+                state->pc += 2;
+            break;
 
-        // JNC case
-        case 0xd2:
-            if (0 == state->cc.cy)
+        // JM case
+        case 0xfa:
+            if (1 == state->cc.s)
                 state->pc = (opcode[2] << 8) | opcode[1];
             else
                 state->pc += 2;
@@ -467,6 +498,16 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc++;
 			}
 			break;
+
+        // RST cases
+        case 0xc7: generateInterrupt(state, 0); break;
+        case 0xcf: generateInterrupt(state, 1); break;
+        case 0xd7: generateInterrupt(state, 2); break;
+        case 0xdf: generateInterrupt(state, 3); break;
+        case 0xe7: generateInterrupt(state, 4); break;
+        case 0xef: generateInterrupt(state, 5); break;
+        case 0xf7: generateInterrupt(state, 6); break;
+        case 0xff: generateInterrupt(state, 7); break;
 
         // RET case
         case 0xc9:
