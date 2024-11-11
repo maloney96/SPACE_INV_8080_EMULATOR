@@ -120,6 +120,14 @@ void handle_DCR(uint8_t *reg, state_8080cpu *state) {
     *reg = res;
 };
 
+void handle_DCX(uint8_t *high, uint8_t *low) {
+    (*low) -= 1;
+    if (*low == 0xff) {
+        (*high) -= 1;
+    }
+};
+
+
 void handle_LXI(uint8_t *high, uint8_t *low, uint8_t *opcode, state_8080cpu *state) {
     *low = opcode[1];
     *high = opcode[2];
@@ -199,7 +207,7 @@ int emulate_8080cpu(state_8080cpu *state) {
             uint16_t offset = (state->d<<8) | state->e;
             write_memory(state, offset, state->a);
             break;
-        
+
         // MVI cases
         case 0x06: handle_MVI(&state->b, opcode, state); break; // MVI B, byte
         case 0x0e: handle_MVI(&state->c, opcode, state); break; // MVI C, byte
@@ -231,19 +239,10 @@ int emulate_8080cpu(state_8080cpu *state) {
             break;
 
         // DCX cases
-        case 0x0b:							    // DCX B 
-			state->c -= 1;
-			if (state->c==0xff) state->b-=1;
-			break;
-        case 0x1b: 							    // DCX D
-			state->e -= 1;
-			if (state->e==0xff) state->d-=1;
-			break;
-        case 0x2b: 								// DCX H
-			state->l -= 1;
-			if (state->l==0xff) state->h-=1;
-			break;	
-        case 0x3b: 							    // DCX SP
+        case 0x0b: handle_DCX(&state->b, &state->c); break; // DCX B
+        case 0x1b: handle_DCX(&state->d, &state->e); break; // DCX D
+        case 0x2b: handle_DCX(&state->h, &state->l); break; // DCX H
+        case 0x3b: 							                // DCX SP
 			state->sp -= 1;
 			break;
 
@@ -317,8 +316,13 @@ int emulate_8080cpu(state_8080cpu *state) {
 			break;
         
         // INX cases
+        case 0x03: handle_INX(&state->b, &state->c); break; // INX B
         case 0x13: handle_INX(&state->d, &state->e); break; // INX D
         case 0x23: handle_INX(&state->h, &state->l); break; // INX H
+        case 0x33:                                          // INX SP 
+            state->sp++;
+			break;	
+
 
         // RAR case
         case 0x1f:
