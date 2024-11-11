@@ -204,6 +204,14 @@ int emulate_8080cpu(state_8080cpu *state) {
             }
             break;
         case 0x3e: handle_MVI(&state->a, opcode, state); break; // MVI A, byte
+
+        // SHLD case
+        case 0x22:
+            uint16_t offset = opcode[1] | (opcode[2] << 8);
+            write_memory(state, offset, state->l);
+            write_memory(state, offset+1, state->h);
+            state->pc += 2;
+			break;
         
         // DAA case
         case 0x27: 
