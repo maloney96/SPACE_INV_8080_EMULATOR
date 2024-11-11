@@ -13,6 +13,18 @@ int parity(int x, int size);
 
 void unimplemented_instruction(state_8080cpu *state);
 
+void write_memory(state_8080cpu *state, uint16_t address, uint8_t value);
+
+void flags_logicA(state_8080cpu *state);
+
+void flags_arithA(state_8080cpu *state, uint16_t res);
+
+void flags_zerosignparity(state_8080cpu *state, uint8_t value);
+
+uint8_t read_HL(state_8080cpu *state);
+
+void write_HL(state_8080cpu *state, uint8_t value);
+
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state);
 
 void handle_DCR(uint8_t *reg, condition_codes *cc);

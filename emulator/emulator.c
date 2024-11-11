@@ -51,6 +51,48 @@ void unimplemented_instruction(state_8080cpu *state) {
     exit(EXIT_FAILURE);
 };
 
+void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
+    if (address < 0x2000) {
+        printf("Writing ROM not allowed on %x\n", address);
+        return;
+     }
+     if (address >= 0x4000) {
+        printf("Writing out of Space Invaders ROM not allowed on %x\n", address);
+        return;
+     }
+     state->memory[address] = value;
+};
+
+void flags_logicA(state_8080cpu *state) {
+    state->cc.cy = state->cc.ac = 0;
+    state->cc.z = (state->a == 0);
+    state->cc.s = (0x80 == (state->a & 0x80));;
+    state->cc.p = parity(state->a, 8);
+};
+
+void flags_arithA(state_8080cpu *state, uint16_t res) {
+    state->cc.cy = (res > 0xff);
+    state->cc.z = ((res&0xff) == 0);
+    state->cc.s = (0x80 == (res & 0x80));
+    state->cc.p = parity(res&0xff, 8);
+};
+
+void flags_zerosignparity(state_8080cpu *state, uint8_t value) {
+    state->cc.z = (value == 0);
+    state->cc.s = (0x80 == (value & 0x80));
+    state->cc.p = parity(value, 8);
+};
+
+uint8_t read_HL(state_8080cpu *state) {
+    uint16_t offset = (state->h << 8) | state->l;
+    return state->memory[offset];
+};
+
+void write_HL(state_8080cpu *state, uint8_t value) {
+    uint16_t offset = (state->h << 8) | state->l;
+    write_memory(state, offset, value); 
+};
+
 int parity(int x, int size) {
 	int i;
 	int p = 0;
@@ -147,6 +189,16 @@ int emulate_8080cpu(state_8080cpu *state) {
             state->pc += 2; 
             break;
         
+        // STAX cases
+        case 0x02: // STAX B
+            uint16_t offset = (state->b<<8) | state->c;
+            write_memory(state, offset, state->a); 
+            break;
+        case 0x12:  // STAX D
+            uint16_t offset = (state->d<<8) | state->e;
+            write_memory(state, offset, state->a);
+            break;
+        
         // MVI cases
         case 0x06: handle_MVI(&state->b, opcode, state); break; // MVI B, byte
         case 0x0e: handle_MVI(&state->c, opcode, state); break; // MVI C, byte
@@ -193,6 +245,11 @@ int emulate_8080cpu(state_8080cpu *state) {
         // INX case
         case 0x13: handle_INX(&state->d, &state->e); break; // INX D
         case 0x23: handle_INX(&state->h, &state->l); break; // INX H
+
+        // CMA case
+        case 0x2f:
+            state->a = ~state->a;
+            break;
 
         // STA case
         case 0x32:
@@ -321,6 +378,15 @@ int emulate_8080cpu(state_8080cpu *state) {
 				state->sp += 2;
 			}
 			break;
+
+        // ACI case
+        case 0xce:
+            uint16_t x = state->a + opcode[1] + state->cc.cy;
+            flags_zerosignparity(state, x&0xff);
+            state->cc.cy = (x > 0xff);
+            state->a = x & 0xff;
+            state->pc++;
+            break;
         
         // JNZ case
         case 0xc2:
@@ -389,8 +455,19 @@ int emulate_8080cpu(state_8080cpu *state) {
         // JMP case
         case 0xc3: state->pc = (opcode[2] << 8) | opcode[1]; break;
 
-
-
+        // CC case
+        case 0xdc:
+            if (state->cc.cy != 0) {
+                uint16_t ret = state->pc+2;
+                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+                write_memory(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
+            else {
+                state->pc += 2;
+            }
+            break;
 
         // PUSH cases
         case 0xc5: handle_PUSH(state->b, state->c, state); break; // PUSH B
