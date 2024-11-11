@@ -204,6 +204,18 @@ int emulate_8080cpu(state_8080cpu *state) {
             }
             break;
         case 0x3e: handle_MVI(&state->a, opcode, state); break; // MVI A, byte
+        
+        // DAA case
+        case 0x27: 
+            if ((state->a &0xf) > 9) {
+                state->a += 6;
+            }
+            if ((state->a&0xf0) > 0x90) {
+                uint16_t res = (uint16_t) state->a + 0x60;
+                state->a = res & 0xff;
+                flags_arithA(state, res);
+            }
+            break;
 
         // DAD cases
         case 0x09: handle_DAD(state->b, state->c, state); break; // DAD B
@@ -225,7 +237,9 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->l = res & 0xff;
                 state->cc.cy = ((res & 0xffff0000) > 0);
             }
-                break; 
+                break;
+        // STC case
+        case 0x37: state->cc.cy = 1; break; 
         
         // RRC case
         case 0x0f:
@@ -592,6 +606,9 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // EI case
         case 0xfb: state->int_enable = 1;  break;
+
+        // DI case
+        case 0xf3: state->int_enable = 0;  break;
 
         // CPI case
         case 0xfe:
