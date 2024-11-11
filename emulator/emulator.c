@@ -157,13 +157,6 @@ void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->sp -= 2;
 };
 
-void logic_flags_A(state_8080cpu *state) {
-    state->cc.cy = state->cc.ac = 0;
-    state->cc.z = (state->a == 0);
-    state->cc.s = (0x80 == (state->a & 0x80));
-    state->cc.p = parity(state->a, 8);
-};
-
 int emulate_8080cpu(state_8080cpu *state) {
 	unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
@@ -353,14 +346,25 @@ int emulate_8080cpu(state_8080cpu *state) {
         // ANA case
         case 0xa7:                                                  // ANA A
             state->a = state->a & state->a;
-            logic_flags_A(state);
+            flags_logicA(state);
             break;
         
         // XRA case
         case 0xaf:                                                  // XRA A
             state->a = state->a ^ state->a;
-            logic_flags_A(state);
+            flags_logicA(state);
             break;
+
+        // CMP cases
+        case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
+        case 0xb9: {uint16_t res = (uint16_t) state->a - (uint16_t) state->c; flags_arithA(state, res);} break; //CMP C
+        case 0xba: {uint16_t res = (uint16_t) state->a - (uint16_t) state->d; flags_arithA(state, res);} break; //CMP D
+        case 0xbb: {uint16_t res = (uint16_t) state->a - (uint16_t) state->e; flags_arithA(state, res);} break; //CMP E
+        case 0xbc: {uint16_t res = (uint16_t) state->a - (uint16_t) state->h; flags_arithA(state, res);} break; //CMP H
+        case 0xbd: {uint16_t res = (uint16_t) state->a - (uint16_t) state->l; flags_arithA(state, res);} break; //CMP L
+        case 0xbe: {uint16_t res = (uint16_t) state->a - (uint16_t) read_HL(state); flags_arithA(state, res);} break; //CMP HL
+        case 0xbf: {uint16_t res = (uint16_t) state->a - (uint16_t) state->a; flags_arithA(state, res);} break; //CMP A
+
 
         // POP cases
         case 0xc1: handle_POP(&state->b, &state->c, state); break; // POP B
@@ -533,7 +537,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xe6:
             {
                 state->a = state->a & opcode[1];
-                logic_flags_A(state);
+                flags_logicA(state);
                 state->pc++;
 			}
 			break;
