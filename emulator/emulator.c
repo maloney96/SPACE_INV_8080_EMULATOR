@@ -161,6 +161,18 @@ void handle_POP(uint8_t  *high, uint8_t *low, state_8080cpu *state) {
     state->sp += 2;
 };
 
+void handle_ADD(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_ADC(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value + state->cc.cy;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+}
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -479,6 +491,26 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x7d: state->a = state->l; break;      				 // MOV A, L
         case 0x7e: handle_MOVwithMemory(&state->a, state, 0); break; // MOV A, M
         case 0x7f: state->a = state->a; break;      				 // MOV A, A
+
+        // ADD instructions
+        case 0x80: handle_ADD(state, &state->a, state->b); break; // ADD B
+        case 0x81: handle_ADD(state, &state->a, state->c); break; // ADD C
+        case 0x82: handle_ADD(state, &state->a, state->d); break; // ADD D
+        case 0x83: handle_ADD(state, &state->a, state->e); break; // ADD E
+        case 0x84: handle_ADD(state, &state->a, state->h); break; // ADD H
+        case 0x85: handle_ADD(state, &state->a, state->l); break; // ADD L
+        case 0x86: handle_ADD(state, &state->a, read_HL(state)); break; // ADD M
+        case 0x87: handle_ADD(state, &state->a, state->a); break; // ADD A
+
+        // ADC instructions
+        case 0x88: handle_ADC(state, &state->a, state->b); break; // ADC B
+        case 0x89: handle_ADC(state, &state->a, state->c); break; // ADC C
+        case 0x8a: handle_ADC(state, &state->a, state->d); break; // ADC D
+        case 0x8b: handle_ADC(state, &state->a, state->e); break; // ADC E
+        case 0x8c: handle_ADC(state, &state->a, state->h); break; // ADC H
+        case 0x8d: handle_ADC(state, &state->a, state->l); break; // ADC L
+        case 0x8e: handle_ADC(state, &state->a, read_HL(state)); break; // ADC M
+        case 0x8f: handle_ADC(state, &state->a, state->a); break; // ADC A
 
         // ANA case
         case 0xa7:                                                  // ANA A
