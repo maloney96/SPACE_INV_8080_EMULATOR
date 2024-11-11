@@ -27,7 +27,7 @@ void write_HL(state_8080cpu *state, uint8_t value);
 
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state);
 
-void handle_DCR(uint8_t *reg, condition_codes *cc);
+void handle_DCR(uint8_t *reg, state_8080cpu *state);
 
 void handle_DCX(uint8_t *high, uint8_t *low); 
 
