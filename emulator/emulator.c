@@ -205,6 +205,21 @@ int emulate_8080cpu(state_8080cpu *state) {
             break;
         case 0x3e: handle_MVI(&state->a, opcode, state); break; // MVI A, byte
 
+        // RLC case
+        case 0x07:
+            uint8_t x = state->a;
+            state->a = ((x & 0x80) >> 7) | (x << 1);
+            state->cc.cy = (0x80 == (x&0x80));
+            break;
+
+        // RAL case
+        case 0x17:
+            uint8_t x = state->a;
+            state->a = state->cc.cy  | (x << 1);
+            state->cc.cy = (0x80 == (x&0x80));
+            break;
+
+
         // SHLD case
         case 0x22:
             uint16_t offset = opcode[1] | (opcode[2] << 8);
@@ -270,6 +285,14 @@ int emulate_8080cpu(state_8080cpu *state) {
         // INX cases
         case 0x13: handle_INX(&state->d, &state->e); break; // INX D
         case 0x23: handle_INX(&state->h, &state->l); break; // INX H
+
+        // RAR case
+        case 0x1f:
+            uint8_t x = state->a;
+            state->a = (state->cc.cy << 7) | (x >> 1);
+            state->cc.cy = (1 == (x&1));
+            break;
+
 
         // CMA case
         case 0x2f:
@@ -397,6 +420,14 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xbe: {uint16_t res = (uint16_t) state->a - (uint16_t) read_HL(state); flags_arithA(state, res);} break; //CMP HL
         case 0xbf: {uint16_t res = (uint16_t) state->a - (uint16_t) state->a; flags_arithA(state, res);} break; //CMP A
 
+        // RNZ case
+        case 0xc0:
+            if (state->cc.z == 0) {
+            state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+            state->sp += 2;
+            }
+            break;
+
         // POP cases
         case 0xc1: handle_POP(&state->b, &state->c, state); break; // POP B
         case 0xd1: handle_POP(&state->d, &state->e, state); break; // POP D
@@ -452,6 +483,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 			else
 				state->pc += 2;
 			break;
+        
+        // RNC case
+        case 0xd0:
+            if (state->cc.cy == 0) {
+            state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+            state->sp += 2;
+            }
+            break;
 		
         // JNC case
         case 0xd2:
@@ -511,6 +550,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // JMP case
         case 0xc3: state->pc = (opcode[2] << 8) | opcode[1]; break;
+
+        // RC case
+        case 0xd8:
+            if (state->cc.cy != 0) {
+                        state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                        state->sp += 2;
+            }
+            break;
 
         // CC case
         case 0xdc:
