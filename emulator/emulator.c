@@ -238,6 +238,7 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->cc.cy = ((res & 0xffff0000) > 0);
             }
                 break;
+       
         // STC case
         case 0x37: state->cc.cy = 1; break; 
         
@@ -258,7 +259,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 			}
 			break;
         
-        // INX case
+        // INX cases
         case 0x13: handle_INX(&state->d, &state->e); break; // INX D
         case 0x23: handle_INX(&state->h, &state->l); break; // INX H
 
@@ -582,6 +583,15 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc += 2;
             }
             break;
+
+        // SUI case
+        case 0xd6:
+			uint8_t x = state->a - opcode[1];
+            flags_zerosignparity(state, x&0xff);
+			state->cc.cy = (state->a < opcode[1]);
+			state->a = x;
+			state->pc++;
+			break;
 
         // ANI case
         case 0xe6:
