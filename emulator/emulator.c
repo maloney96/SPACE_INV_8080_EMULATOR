@@ -381,6 +381,20 @@ int emulate_8080cpu(state_8080cpu *state) {
 				state->sp += 2;
 			}
 			break;
+        
+        // CZ case
+        case 0xcc: 
+            if (state->cc.z == 1) {
+                uint16_t ret = state->pc+2;
+                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+                write_memory(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
+            else {
+                state->pc += 2;
+            }
+            break;
 
         // ACI case
         case 0xce:
