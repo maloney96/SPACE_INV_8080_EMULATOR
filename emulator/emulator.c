@@ -618,6 +618,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 			state->pc++;
 			break;
 
+        // RPO case
+        case 0xe0:
+			if (state->cc.p == 0) {
+				state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+				state->sp += 2;
+			}
+			break;
+
         // ANI case
         case 0xe6:
             {
