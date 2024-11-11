@@ -187,10 +187,12 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x25: handle_DCR(&state->h, state); break; // DCR H
         case 0x2d: handle_DCR(&state->l, state); break; // DCR L
         case 0x35: 							            // DCR M
-			uint8_t res = read_HL(state) - 1;
-            flags_zerosignparity(state, res);
-            write_HL(state, res);
-			break;
+			{
+                uint8_t res = read_HL(state) - 1;
+                flags_zerosignparity(state, res);
+                write_HL(state, res);
+            }
+            break;
         case 0x3d: handle_DCR(&state->a, state); break; // DCR A
 
         // LXI cases
@@ -204,12 +206,16 @@ int emulate_8080cpu(state_8080cpu *state) {
         
         // STAX cases
         case 0x02: // STAX B
-            uint16_t offset = (state->b<<8) | state->c;
-            write_memory(state, offset, state->a); 
+            {
+                uint16_t offset = (state->b<<8) | state->c;
+                write_memory(state, offset, state->a); 
+            }
             break;
         case 0x12:  // STAX D
-            uint16_t offset = (state->d<<8) | state->e;
-            write_memory(state, offset, state->a);
+            {
+                uint16_t offset = (state->d<<8) | state->e;
+                write_memory(state, offset, state->a);
+            }
             break;
         
         // INR cases
@@ -220,9 +226,11 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x24: handle_INR(state, &state->h); break; // INR H
         case 0x2c: handle_INR(state, &state->l); break; // INR L
         case 0x34:                                      // INR M
-            uint8_t res = read_HL(state) + 1;
-            flags_zerosignparity(state, res);
-            write_HL(state, res);
+            {
+                uint8_t res = read_HL(state) + 1;
+                flags_zerosignparity(state, res);
+                write_HL(state, res);
+            }
             break;
         case 0x3c: handle_INR(state, &state->a); break; // INR A
 
@@ -244,16 +252,20 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // RLC case
         case 0x07:
-            uint8_t x = state->a;
-            state->a = ((x & 0x80) >> 7) | (x << 1);
-            state->cc.cy = (0x80 == (x&0x80));
+            {
+                uint8_t x = state->a;
+                state->a = ((x & 0x80) >> 7) | (x << 1);
+                state->cc.cy = (0x80 == (x&0x80));
+            }
             break;
 
         // RAL case
         case 0x17:
-            uint8_t x = state->a;
-            state->a = state->cc.cy  | (x << 1);
-            state->cc.cy = (0x80 == (x&0x80));
+            {
+                uint8_t x = state->a;
+                state->a = state->cc.cy  | (x << 1);
+                state->cc.cy = (0x80 == (x&0x80));
+            }
             break;
 
         // DCX cases
@@ -266,11 +278,13 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // SHLD case
         case 0x22:
-            uint16_t offset = opcode[1] | (opcode[2] << 8);
-            write_memory(state, offset, state->l);
-            write_memory(state, offset+1, state->h);
-            state->pc += 2;
-			break;
+            {
+                uint16_t offset = opcode[1] | (opcode[2] << 8);
+                write_memory(state, offset, state->l);
+                write_memory(state, offset+1, state->h);
+                state->pc += 2;
+            }
+            break;
         
         // DAA case
         case 0x27: 
@@ -320,16 +334,16 @@ int emulate_8080cpu(state_8080cpu *state) {
         
         // LDAX cases
         case 0x0a: // LDAX B
-        {
-			uint16_t offset=(state->b << 8) | state->c;
-			state->a = state->memory[offset];
-        }
-			break;
+            {
+                uint16_t offset=(state->b << 8) | state->c;
+                state->a = state->memory[offset];
+            }
+            break;
 
         case 0x1a:  // LDAX D
             {
-			uint16_t offset = (state->d << 8) | state->e;
-			state->a = state->memory[offset];
+    			uint16_t offset = (state->d << 8) | state->e;
+	    		state->a = state->memory[offset];
 			}
 			break;
         
@@ -344,17 +358,21 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // RAR case
         case 0x1f:
-            uint8_t x = state->a;
-            state->a = (state->cc.cy << 7) | (x >> 1);
-            state->cc.cy = (1 == (x&1));
+            {
+                uint8_t x = state->a;
+                state->a = (state->cc.cy << 7) | (x >> 1);
+                state->cc.cy = (1 == (x&1));
+            }
             break;
 
         // LHLD case
         case 0x2a:
-            uint16_t offset = opcode[1] | (opcode[2] << 8);
-            state->l = state->memory[offset];
-            state->h = state->memory[offset+1];
-            state->pc += 2;
+            {
+                uint16_t offset = opcode[1] | (opcode[2] << 8);
+                state->l = state->memory[offset];
+                state->h = state->memory[offset+1];
+                state->pc += 2;
+            }
             break;
 
         // CMA case
@@ -365,18 +383,18 @@ int emulate_8080cpu(state_8080cpu *state) {
         // STA case
         case 0x32:
             {
-			uint16_t offset = (opcode[2] << 8) | (opcode[1]);
-			state->memory[offset] = state->a;
-			state->pc += 2;
+			    uint16_t offset = (opcode[2] << 8) | (opcode[1]);
+			    state->memory[offset] = state->a;
+			    state->pc += 2;
 			}
 			break;
         
         // LDA case
         case 0x3a: 
             {
-			uint16_t offset = (opcode[2]<<8) | (opcode[1]);
-			state->a = state->memory[offset];
-			state->pc+=2;
+			    uint16_t offset = (opcode[2]<<8) | (opcode[1]);
+    			state->a = state->memory[offset];
+	    		state->pc+=2;
 			}
 			break;
 
@@ -533,11 +551,13 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // ACI case
         case 0xce:
-            uint16_t x = state->a + opcode[1] + state->cc.cy;
-            flags_zerosignparity(state, x&0xff);
-            state->cc.cy = (x > 0xff);
-            state->a = x & 0xff;
-            state->pc++;
+            {
+                uint16_t x = state->a + opcode[1] + state->cc.cy;
+                flags_zerosignparity(state, x&0xff);
+                state->cc.cy = (x > 0xff);
+                state->a = x & 0xff;
+                state->pc++;
+            }
             break;
         
         // JNZ case
@@ -644,12 +664,14 @@ int emulate_8080cpu(state_8080cpu *state) {
         
         // SBI case
         case 0xde:
-         	uint16_t x = state->a - opcode[1] - state->cc.cy;
-            flags_zerosignparity(state, x&0xff);
-			state->cc.cy = (x > 0xff);
-			state->a = x & 0xff;
-			state->pc++;
-			break;
+         	{
+                uint16_t x = state->a - opcode[1] - state->cc.cy;
+                flags_zerosignparity(state, x&0xff);
+	    		state->cc.cy = (x > 0xff);
+		    	state->a = x & 0xff;
+			    state->pc++;
+            }
+            break;
 
         // PUSH cases
         case 0xc5: handle_PUSH(state->b, state->c, state); break; // PUSH B
@@ -727,12 +749,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // SUI case
         case 0xd6:
-			uint8_t x = state->a - opcode[1];
-            flags_zerosignparity(state, x&0xff);
-			state->cc.cy = (state->a < opcode[1]);
-			state->a = x;
-			state->pc++;
-			break;
+			{
+                uint8_t x = state->a - opcode[1];
+                flags_zerosignparity(state, x&0xff);
+	    		state->cc.cy = (state->a < opcode[1]);
+		    	state->a = x;
+			    state->pc++;
+            }
+            break;
 
         // RPO case
         case 0xe0:
