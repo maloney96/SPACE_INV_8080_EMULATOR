@@ -365,7 +365,6 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xbe: {uint16_t res = (uint16_t) state->a - (uint16_t) read_HL(state); flags_arithA(state, res);} break; //CMP HL
         case 0xbf: {uint16_t res = (uint16_t) state->a - (uint16_t) state->a; flags_arithA(state, res);} break; //CMP A
 
-
         // POP cases
         case 0xc1: handle_POP(&state->b, &state->c, state); break; // POP B
         case 0xd1: handle_POP(&state->d, &state->e, state); break; // POP D
@@ -532,6 +531,20 @@ int emulate_8080cpu(state_8080cpu *state) {
         
         // OUT case
         case 0xd3: state->pc++; break;
+
+        // CNC case
+        case 0xd4: 
+            if (state->cc.cy == 0) {
+                uint16_t ret = state->pc+2;
+                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+                write_memory(state, state->sp-2, (ret & 0xff));
+                state->sp = state->sp - 2;
+                state->pc = (opcode[2] << 8) | opcode[1];
+            }
+            else {
+                state->pc += 2;
+            }
+            break;
 
         // ANI case
         case 0xe6:
