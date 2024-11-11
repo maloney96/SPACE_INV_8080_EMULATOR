@@ -414,6 +414,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 			}
 			break;
         
+        // RZ case
+        case 0xc8:
+			if (state->cc.z) {
+				state->pc = state->memory[state->sp] | (state->memory[state->sp+1] << 8);
+				state->sp += 2;
+			}
+			break;
+        
         // CZ case
         case 0xcc: 
             if (state->cc.z == 1) {
