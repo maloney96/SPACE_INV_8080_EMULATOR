@@ -517,6 +517,15 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc += 2;
             }
             break;
+        
+        // SBI case
+        case 0xde:
+         	uint16_t x = state->a - opcode[1] - state->cc.cy;
+            flags_zerosignparity(state, x&0xff);
+			state->cc.cy = (x > 0xff);
+			state->a = x & 0xff;
+			state->pc++;
+			break;
 
         // PUSH cases
         case 0xc5: handle_PUSH(state->b, state->c, state); break; // PUSH B
