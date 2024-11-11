@@ -230,6 +230,22 @@ int emulate_8080cpu(state_8080cpu *state) {
             state->cc.cy = (0x80 == (x&0x80));
             break;
 
+        // DCX cases
+        case 0x0b:							    // DCX B 
+			state->c -= 1;
+			if (state->c==0xff) state->b-=1;
+			break;
+        case 0x1b: 							    // DCX D
+			state->e -= 1;
+			if (state->e==0xff) state->d-=1;
+			break;
+        case 0x2b: 								// DCX H
+			state->l -= 1;
+			if (state->l==0xff) state->h-=1;
+			break;	
+        case 0x3b: 							    // DCX SP
+			state->sp -= 1;
+			break;
 
         // SHLD case
         case 0x22:
@@ -584,6 +600,11 @@ int emulate_8080cpu(state_8080cpu *state) {
                         state->sp += 2;
             }
             break;
+        
+        // IN case:
+        case 0xdb:
+			state->pc++;
+			break;
 
         // CC case
         case 0xdc:
