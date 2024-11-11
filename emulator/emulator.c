@@ -127,7 +127,6 @@ void handle_DCX(uint8_t *high, uint8_t *low) {
     }
 };
 
-
 void handle_LXI(uint8_t *high, uint8_t *low, uint8_t *opcode, state_8080cpu *state) {
     *low = opcode[1];
     *high = opcode[2];
@@ -139,6 +138,11 @@ void handle_INX(uint8_t *high, uint8_t *low) {
     if (*low == 0) {
         (*high)++;
     }
+};
+
+void handle_INR(state_8080cpu *state, uint8_t *reg) {
+    (*reg) += 1;
+    flags_zerosignparity(state, *reg);
 };
 
 void handle_MOVwithMemory(uint8_t *reg, state_8080cpu *state, int direction) {
@@ -207,6 +211,20 @@ int emulate_8080cpu(state_8080cpu *state) {
             uint16_t offset = (state->d<<8) | state->e;
             write_memory(state, offset, state->a);
             break;
+        
+        // INR cases
+        case 0x04: handle_INR(state, &state->b); break; // INR B
+        case 0x0c: handle_INR(state, &state->c); break; // INR C
+        case 0x14: handle_INR(state, &state->d); break; // INR D
+        case 0x1c: handle_INR(state, &state->e); break; // INR E
+        case 0x24: handle_INR(state, &state->h); break; // INR H
+        case 0x2c: handle_INR(state, &state->l); break; // INR L
+        case 0x34:                                      // INR M
+            uint8_t res = read_HL(state) + 1;
+            flags_zerosignparity(state, res);
+            write_HL(state, res);
+            break;
+        case 0x3c: handle_INR(state, &state->a); break; // INR A
 
         // MVI cases
         case 0x06: handle_MVI(&state->b, opcode, state); break; // MVI B, byte
