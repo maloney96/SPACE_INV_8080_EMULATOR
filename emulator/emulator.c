@@ -217,6 +217,15 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->cc.cy = ((res & 0xffff0000) != 0);
             }
             break;
+        case 0x39: 							                       // DAD SP
+            {
+                uint32_t hl = (state->h << 8) | state->l;
+                uint32_t res = hl + state->sp;
+                state->h = (res & 0xff00) >> 8;
+                state->l = res & 0xff;
+                state->cc.cy = ((res & 0xffff0000) > 0);
+            }
+                break; 
         
         // RRC case
         case 0x0f:
