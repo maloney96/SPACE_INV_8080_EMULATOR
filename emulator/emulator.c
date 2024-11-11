@@ -114,11 +114,9 @@ void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state) {
     state->cc.cy = ((res & 0xffff0000) != 0);
 }
 
-void handle_DCR(uint8_t *reg, condition_codes *cc) {
+void handle_DCR(uint8_t *reg, state_8080cpu *state) {
     uint8_t res = *reg - 1;
-    cc->z = (res == 0);
-    cc->s = (0x80 == (res & 0x80));
-    cc->p = parity(res, 8);
+    flags_zerosignparity(state, res);
     *reg = res;
 };
 
@@ -170,9 +168,19 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x00: break;
 
         // DCR cases
-        case 0x05: handle_DCR(&state->b, &state->cc); break; // DCR B
-        case 0x0d: handle_DCR(&state->c, &state->cc); break; // DCR C
-        
+        case 0x05: handle_DCR(&state->b, state); break; // DCR B
+        case 0x0d: handle_DCR(&state->c, state); break; // DCR C
+        case 0x15: handle_DCR(&state->d, state); break; // DCR D
+        case 0x1d: handle_DCR(&state->e, state); break; // DCR E
+        case 0x25: handle_DCR(&state->h, state); break; // DCR H
+        case 0x2d: handle_DCR(&state->l, state); break; // DCR L
+        case 0x35: 							            // DCR M
+			uint8_t res = read_HL(state) - 1;
+            flags_zerosignparity(state, res);
+            write_HL(state, res);
+			break;
+        case 0x3d: handle_DCR(&state->a, state); break; // DCR A
+
         // LXI cases
         case 0x01: handle_LXI(&state->b, &state->c, opcode, state); break; // LXI B, word
         case 0x11: handle_LXI(&state->d, &state->e, opcode, state); break; // LXI D, word
@@ -403,6 +411,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x74: handle_MOVwithMemory(&state->h, state, 1); break; // MOV M, H
         case 0x75: handle_MOVwithMemory(&state->l, state, 1); break; // MOV M, L
         //0x76 is HLT
+        case 0x76: break;
         case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV M, A
 
         // DESTINATION A
@@ -731,7 +740,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 
         // Otherwise, treat as unimplemented instruction
         default:
-                unimplemented_instruction(state);
+            unimplemented_instruction(state);
             break;
         
         
