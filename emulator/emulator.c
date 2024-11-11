@@ -195,7 +195,10 @@ int emulate_8080cpu(state_8080cpu *state) {
         // MVI cases
         case 0x06: handle_MVI(&state->b, opcode, state); break; // MVI B, byte
         case 0x0e: handle_MVI(&state->c, opcode, state); break; // MVI C, byte
+        case 0x16: handle_MVI(&state->d, opcode, state); break; // MVI D, byte
+        case 0x1e: handle_MVI(&state->e, opcode, state); break; // MVI E, byte
         case 0x26: handle_MVI(&state->h, opcode, state); break; // MVI H, byte
+        case 0x2e: handle_MVI(&state->l, opcode, state); break; // MVI L, byte
         case 0x36:                                              // MVI M, byte
             {
                 uint16_t offset = (state->h << 8) | state->l;
@@ -274,7 +277,14 @@ int emulate_8080cpu(state_8080cpu *state) {
 			}
 			break;
         
-        // LDAX case
+        // LDAX cases
+        case 0x0a: // LDAX B
+        {
+			uint16_t offset=(state->b << 8) | state->c;
+			state->a = state->memory[offset];
+        }
+			break;
+
         case 0x1a:  // LDAX D
             {
 			uint16_t offset = (state->d << 8) | state->e;
@@ -293,6 +303,13 @@ int emulate_8080cpu(state_8080cpu *state) {
             state->cc.cy = (1 == (x&1));
             break;
 
+        // LHLD case
+        case 0x2a:
+            uint16_t offset = opcode[1] | (opcode[2] << 8);
+            state->l = state->memory[offset];
+            state->h = state->memory[offset+1];
+            state->pc += 2;
+            break;
 
         // CMA case
         case 0x2f:
