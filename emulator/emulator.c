@@ -104,7 +104,19 @@ int parity(int x, int size) {
 	}
 	return (0 == (p & 0x1));
 };
- 
+
+void handle_CALL(uint_8t conditional) {
+    if (conditional) {
+        uint16_t ret = state->pc+2;
+        state->memory[state->sp-1] = (ret >> 8) & 0xff;
+        state->memory[state->sp-2] = (ret & 0xff);
+        state->sp = state->sp - 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+    } else {
+    state->pc += 2;
+    }
+}
+
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state) {
     uint32_t hl = (state->h << 8) | state->l;
     uint32_t reg_pair = (reg_h << 8) | reg_l;
@@ -720,32 +732,43 @@ int emulate_8080cpu(state_8080cpu *state) {
 			break;
 
         // CALL case
-        case 0xcd: 		
-			{
-                uint16_t ret = state->pc+2;
-                state->memory[state->sp-1] = (ret >> 8) & 0xff;
-                state->memory[state->sp-2] = (ret & 0xff);
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-			}
- 			break;
+        case 0xcd:
+            handle_CALL(1); break;
         
         // OUT case
         case 0xd3: state->pc++; break;
 
+        // CNZ case:
+        case 0xc4:
+            handle_CALL(state->cc.z == 0); break;
+
         // CNC case
-        case 0xd4: 
-            if (state->cc.cy == 0) {
-                uint16_t ret = state->pc+2;
-                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
-                write_memory(state, state->sp-2, (ret & 0xff));
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-            }
-            else {
-                state->pc += 2;
-            }
-            break;
+        case 0xd4:
+            handle_CALL(state->cc.cy == 0); break;
+
+        // CPO case
+        case 0xe4:
+            handle_call(state->cc.p == 0); break;
+
+        // CP case
+        case 0xf4:
+            handle_call(state->cc.s == 0); break;
+
+        // CZ case:
+        case 0xcc:
+            handle_CALL(state->cc.z == 1); break;
+
+        // CC case
+        case 0xdc:
+            handle_CALL(state->cc.cy == 1); break;
+
+        // CPO case
+        case 0xec:
+            handle_call(state->cc.p == 1); break;
+
+        // CP case
+        case 0xfc:
+            handle_call(state->cc.s == 1); break;
 
         // SUI case
         case 0xd6:
