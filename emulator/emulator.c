@@ -185,6 +185,11 @@ void handle_SBB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
     *reg = res & 0xff;
 };
 
+void handle_ANA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a & value;
+    flags_logicA(state);
+};
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -504,7 +509,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x7e: handle_MOVwithMemory(&state->a, state, 0); break; // MOV A, M
         case 0x7f: state->a = state->a; break;      				 // MOV A, A
 
-        // ADD instructions
+        // ADD cases
         case 0x80: handle_ADD(state, &state->a, state->b); break; // ADD B
         case 0x81: handle_ADD(state, &state->a, state->c); break; // ADD C
         case 0x82: handle_ADD(state, &state->a, state->d); break; // ADD D
@@ -514,7 +519,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x86: handle_ADD(state, &state->a, read_HL(state)); break; // ADD M
         case 0x87: handle_ADD(state, &state->a, state->a); break; // ADD A
 
-        // ADC instructions
+        // ADC cases
         case 0x88: handle_ADC(state, &state->a, state->b); break; // ADC B
         case 0x89: handle_ADC(state, &state->a, state->c); break; // ADC C
         case 0x8a: handle_ADC(state, &state->a, state->d); break; // ADC D
@@ -524,7 +529,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x8e: handle_ADC(state, &state->a, read_HL(state)); break; // ADC M
         case 0x8f: handle_ADC(state, &state->a, state->a); break; // ADC A
 
-        // SUB instructions
+        // SUB cases
         case 0x90: handle_SUB(state, &state->a, state->b); break; // SUB B
         case 0x91: handle_SUB(state, &state->a, state->c); break; // SUB C
         case 0x92: handle_SUB(state, &state->a, state->d); break; // SUB D
@@ -534,7 +539,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x96: handle_SUB(state, &state->a, read_HL(state)); break; // SUB M
         case 0x97: handle_SUB(state, &state->a, state->a); break; // SUB A
 
-        // SBB instructions
+        // SBB cases
         case 0x98: handle_SBB(state, &state->a, state->b); break; // SBB B
         case 0x99: handle_SBB(state, &state->a, state->c); break; // SBB C
         case 0x9a: handle_SBB(state, &state->a, state->d); break; // SBB D
@@ -544,11 +549,15 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x9e: handle_SBB(state, &state->a, read_HL(state)); break; // SBB M
         case 0x9f: handle_SBB(state, &state->a, state->a); break; // SBB A
 
-        // ANA case
-        case 0xa7:                                                  // ANA A
-            state->a = state->a & state->a;
-            flags_logicA(state);
-            break;
+        // ANA cases
+        case 0xa0: handle_ANA(state, state->b); break; // ANA B
+        case 0xa1: handle_ANA(state, state->c); break; // ANA C
+        case 0xa2: handle_ANA(state, state->d); break; // ANA D
+        case 0xa3: handle_ANA(state, state->e); break; // ANA E
+        case 0xa4: handle_ANA(state, state->h); break; // ANA H
+        case 0xa5: handle_ANA(state, state->l); break; // ANA L
+        case 0xa6: handle_ANA(state, read_HL(state)); break; // ANA M
+        case 0xa7: handle_ANA(state, state->a); break; // ANA A
         
         // XRA case
         case 0xaf:                                                  // XRA A
