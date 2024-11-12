@@ -195,6 +195,11 @@ void handle_XRA(state_8080cpu *state, uint8_t value) {
     flags_logicA(state);
 };
 
+void handle_ORA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a | value;
+    flags_logicA(state);
+};
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -573,6 +578,16 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xad: handle_XRA(state, state->l); break; // XRA L
         case 0xae: handle_XRA(state, read_HL(state)); break; // XRA M
         case 0xaf: handle_XRA(state, state->a); break; // XRA A
+
+        // ORA cases
+        case 0xb0: handle_ORA(state, state->b); break; // ORA B
+        case 0xb1: handle_ORA(state, state->c); break; // ORA C
+        case 0xb2: handle_ORA(state, state->d); break; // ORA D
+        case 0xb3: handle_ORA(state, state->e); break; // ORA E
+        case 0xb4: handle_ORA(state, state->h); break; // ORA H
+        case 0xb5: handle_ORA(state, state->l); break; // ORA L
+        case 0xb6: handle_ORA(state, read_HL(state)); break; // ORA M
+        case 0xb7: handle_ORA(state, state->a); break; // ORA A
 
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
