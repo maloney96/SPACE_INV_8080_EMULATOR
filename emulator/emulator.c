@@ -105,15 +105,16 @@ int parity(int x, int size) {
 	return (0 == (p & 0x1));
 };
 
-void handle_CALL(uint8_t conditional, state_8080cpu* state, uint8_t *opcode) {
+void handle_CALL(uint8_t conditional, state_8080cpu* state, uint8_t* opcode) {
     if (conditional) {
         uint16_t ret = state->pc+2;
-        state->memory[state->sp-1] = (ret >> 8) & 0xff;
-        state->memory[state->sp-2] = (ret & 0xff);
+        write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+        write_memory(state, state->sp-2, (ret & 0xff));
         state->sp = state->sp - 2;
         state->pc = (opcode[2] << 8) | opcode[1];
-    } else {
-    state->pc += 2;
+    }
+    else {
+        state->pc += 2;
     }
 }
 
