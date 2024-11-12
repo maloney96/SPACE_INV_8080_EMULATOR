@@ -832,10 +832,10 @@ void generateInterrupt(state_8080cpu* state, int interrupt_num)
 
     //perform "PUSH PC"
     printf("Pushing Program Counter: %04x\n", state->pc);
-    state->memory[state->sp] = state->pc << 8;
-    state->sp -= 1;
-    state->memory[state->sp] = state->pc >> 8;
-    state->sp -= 1;
+    uint16_t ret = state->pc;
+    write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+    write_memory(state, state->sp-2, (ret & 0xff));
+    state->sp = state->sp - 2;
     //Set the PC to the low memory vector.
     //This is identical to an "RST interrupt_num" instruction.
     state->pc = 8 * interrupt_num;
