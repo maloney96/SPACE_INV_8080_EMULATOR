@@ -173,6 +173,18 @@ void handle_ADC(state_8080cpu *state, uint8_t *reg, uint8_t value) {
     *reg = res & 0xff;
 }
 
+void handle_SUB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg - value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_SBB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg - value - state->cc.cy;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -511,6 +523,26 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x8d: handle_ADC(state, &state->a, state->l); break; // ADC L
         case 0x8e: handle_ADC(state, &state->a, read_HL(state)); break; // ADC M
         case 0x8f: handle_ADC(state, &state->a, state->a); break; // ADC A
+
+        // SUB instructions
+        case 0x90: handle_SUB(state, &state->a, state->b); break; // SUB B
+        case 0x91: handle_SUB(state, &state->a, state->c); break; // SUB C
+        case 0x92: handle_SUB(state, &state->a, state->d); break; // SUB D
+        case 0x93: handle_SUB(state, &state->a, state->e); break; // SUB E
+        case 0x94: handle_SUB(state, &state->a, state->h); break; // SUB H
+        case 0x95: handle_SUB(state, &state->a, state->l); break; // SUB L
+        case 0x96: handle_SUB(state, &state->a, read_HL(state)); break; // SUB M
+        case 0x97: handle_SUB(state, &state->a, state->a); break; // SUB A
+
+        // SBB instructions
+        case 0x98: handle_SBB(state, &state->a, state->b); break; // SBB B
+        case 0x99: handle_SBB(state, &state->a, state->c); break; // SBB C
+        case 0x9a: handle_SBB(state, &state->a, state->d); break; // SBB D
+        case 0x9b: handle_SBB(state, &state->a, state->e); break; // SBB E
+        case 0x9c: handle_SBB(state, &state->a, state->h); break; // SBB H
+        case 0x9d: handle_SBB(state, &state->a, state->l); break; // SBB L
+        case 0x9e: handle_SBB(state, &state->a, read_HL(state)); break; // SBB M
+        case 0x9f: handle_SBB(state, &state->a, state->a); break; // SBB A
 
         // ANA case
         case 0xa7:                                                  // ANA A
