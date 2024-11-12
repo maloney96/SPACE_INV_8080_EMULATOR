@@ -104,7 +104,20 @@ int parity(int x, int size) {
 	}
 	return (0 == (p & 0x1));
 };
- 
+
+void handle_CALL(uint8_t conditional, state_8080cpu* state, uint8_t* opcode) {
+    if (conditional) {
+        uint16_t ret = state->pc+2;
+        write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+        write_memory(state, state->sp-2, (ret & 0xff));
+        state->sp = state->sp - 2;
+        state->pc = (opcode[2] << 8) | opcode[1];
+    }
+    else {
+        state->pc += 2;
+    }
+}
+
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state) {
     uint32_t hl = (state->h << 8) | state->l;
     uint32_t reg_pair = (reg_h << 8) | reg_l;
@@ -380,6 +393,10 @@ int emulate_8080cpu(state_8080cpu *state) {
             state->a = ~state->a;
             break;
 
+        // CMC case
+        case 0x3f:
+            state->cc.cy = ~state->cc.cy; break;
+
         // STA case
         case 0x32:
             {
@@ -535,19 +552,6 @@ int emulate_8080cpu(state_8080cpu *state) {
 			}
 			break;
         
-        // CZ case
-        case 0xcc: 
-            if (state->cc.z == 1) {
-                uint16_t ret = state->pc+2;
-                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
-                write_memory(state, state->sp-2, (ret & 0xff));
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-            }
-            else {
-                state->pc += 2;
-            }
-            break;
 
         // ACI case
         case 0xce:
@@ -648,20 +652,6 @@ int emulate_8080cpu(state_8080cpu *state) {
 			state->pc++;
 			break;
 
-        // CC case
-        case 0xdc:
-            if (state->cc.cy != 0) {
-                uint16_t ret = state->pc+2;
-                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
-                write_memory(state, state->sp-2, (ret & 0xff));
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-            }
-            else {
-                state->pc += 2;
-            }
-            break;
-        
         // SBI case
         case 0xde:
          	{
@@ -719,33 +709,45 @@ int emulate_8080cpu(state_8080cpu *state) {
 			state->sp += 2;
 			break;
 
-        // CALL case
-        case 0xcd: 		
-			{
-                uint16_t ret = state->pc+2;
-                state->memory[state->sp-1] = (ret >> 8) & 0xff;
-                state->memory[state->sp-2] = (ret & 0xff);
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-			}
- 			break;
-        
         // OUT case
         case 0xd3: state->pc++; break;
 
+        // CALL cases
+        // CALL case
+        case 0xcd:
+            handle_CALL(1, state, opcode); break;
+
+        // CNZ case:
+        case 0xc4:
+            handle_CALL(state->cc.z == 0, state, opcode); break;
+
         // CNC case
-        case 0xd4: 
-            if (state->cc.cy == 0) {
-                uint16_t ret = state->pc+2;
-                write_memory(state, state->sp-1, (ret >> 8) & 0xff);
-                write_memory(state, state->sp-2, (ret & 0xff));
-                state->sp = state->sp - 2;
-                state->pc = (opcode[2] << 8) | opcode[1];
-            }
-            else {
-                state->pc += 2;
-            }
-            break;
+        case 0xd4:
+            handle_CALL(state->cc.cy == 0, state, opcode); break;
+
+        // CPO case
+        case 0xe4:
+            handle_CALL(state->cc.p == 0, state, opcode); break;
+
+        // CP case
+        case 0xf4:
+            handle_CALL(state->cc.s == 0, state, opcode); break;
+
+        // CZ case:
+        case 0xcc:
+            handle_CALL(state->cc.z == 1, state, opcode); break;
+
+        // CC case
+        case 0xdc:
+            handle_CALL(state->cc.cy == 1, state, opcode); break;
+
+        // CPE case
+        case 0xec:
+            handle_CALL(state->cc.p == 1, state, opcode); break;
+
+        // CM case
+        case 0xfc:
+            handle_CALL(state->cc.s == 1, state, opcode); break;
 
         // SUI case
         case 0xd6:
