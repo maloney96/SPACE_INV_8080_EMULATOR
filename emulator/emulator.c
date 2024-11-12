@@ -190,6 +190,11 @@ void handle_ANA(state_8080cpu *state, uint8_t value) {
     flags_logicA(state);
 };
 
+void handle_XRA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a ^ value;
+    flags_logicA(state);
+};
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -559,11 +564,15 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xa6: handle_ANA(state, read_HL(state)); break; // ANA M
         case 0xa7: handle_ANA(state, state->a); break; // ANA A
         
-        // XRA case
-        case 0xaf:                                                  // XRA A
-            state->a = state->a ^ state->a;
-            flags_logicA(state);
-            break;
+        // XRA cases
+        case 0xa8: handle_XRA(state, state->b); break; // XRA B
+        case 0xa9: handle_XRA(state, state->c); break; // XRA C
+        case 0xaa: handle_XRA(state, state->d); break; // XRA D
+        case 0xab: handle_XRA(state, state->e); break; // XRA E
+        case 0xac: handle_XRA(state, state->h); break; // XRA H
+        case 0xad: handle_XRA(state, state->l); break; // XRA L
+        case 0xae: handle_XRA(state, read_HL(state)); break; // XRA M
+        case 0xaf: handle_XRA(state, state->a); break; // XRA A
 
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
