@@ -649,8 +649,16 @@ int emulate_8080cpu(state_8080cpu *state) {
         
         // IN case:
         case 0xdb:
-			state->pc++;
-			break;
+            switch(opcode[1]){
+            case 0: state->a = state->ioports.read00; break;
+            case 1: state->a = state->ioports.read01; break;
+            case 2: state->a = state->ioports.read02; break;
+            case 3: state->a = state->ioports.read03; break;
+            default: fprintf(stderr, "IN command - unrecognized port %d", opcode[1]);
+            }
+            state->pc++;
+            break;
+        break;
 
         // SBI case
         case 0xde:
