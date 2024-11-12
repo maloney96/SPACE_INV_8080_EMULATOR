@@ -689,6 +689,18 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc += 2;
             break;
 
+        // XTHL case
+        case 0xe3:
+            {
+                uint8_t h = state->h;
+                uint8_t l = state->l;
+                state->l = state->memory[state->sp];
+                state->h = state->memory[state->sp+1];
+                write_memory(state, state->sp, l);
+                write_memory(state, state->sp+1, h);
+            }
+            break;
+
         // JP case
         case 0xf2:
             if (0 == state->cc.s)
