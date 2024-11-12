@@ -174,6 +174,45 @@ void handle_POP(uint8_t  *high, uint8_t *low, state_8080cpu *state) {
     state->sp += 2;
 };
 
+void handle_ADD(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_ADC(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value + state->cc.cy;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+}
+
+void handle_SUB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg - value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_SBB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg - value - state->cc.cy;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_ANA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a & value;
+    flags_logicA(state);
+};
+
+void handle_XRA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a ^ value;
+    flags_logicA(state);
+};
+
+void handle_ORA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a | value;
+    flags_logicA(state);
+};
+
 void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
     state->memory[state->sp - 1] = high;
     state->memory[state->sp - 2] = low;
@@ -497,17 +536,75 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x7e: handle_MOVwithMemory(&state->a, state, 0); break; // MOV A, M
         case 0x7f: state->a = state->a; break;      				 // MOV A, A
 
-        // ANA case
-        case 0xa7:                                                  // ANA A
-            state->a = state->a & state->a;
-            flags_logicA(state);
-            break;
+        // ADD cases
+        case 0x80: handle_ADD(state, &state->a, state->b); break; // ADD B
+        case 0x81: handle_ADD(state, &state->a, state->c); break; // ADD C
+        case 0x82: handle_ADD(state, &state->a, state->d); break; // ADD D
+        case 0x83: handle_ADD(state, &state->a, state->e); break; // ADD E
+        case 0x84: handle_ADD(state, &state->a, state->h); break; // ADD H
+        case 0x85: handle_ADD(state, &state->a, state->l); break; // ADD L
+        case 0x86: handle_ADD(state, &state->a, read_HL(state)); break; // ADD M
+        case 0x87: handle_ADD(state, &state->a, state->a); break; // ADD A
+
+        // ADC cases
+        case 0x88: handle_ADC(state, &state->a, state->b); break; // ADC B
+        case 0x89: handle_ADC(state, &state->a, state->c); break; // ADC C
+        case 0x8a: handle_ADC(state, &state->a, state->d); break; // ADC D
+        case 0x8b: handle_ADC(state, &state->a, state->e); break; // ADC E
+        case 0x8c: handle_ADC(state, &state->a, state->h); break; // ADC H
+        case 0x8d: handle_ADC(state, &state->a, state->l); break; // ADC L
+        case 0x8e: handle_ADC(state, &state->a, read_HL(state)); break; // ADC M
+        case 0x8f: handle_ADC(state, &state->a, state->a); break; // ADC A
+
+        // SUB cases
+        case 0x90: handle_SUB(state, &state->a, state->b); break; // SUB B
+        case 0x91: handle_SUB(state, &state->a, state->c); break; // SUB C
+        case 0x92: handle_SUB(state, &state->a, state->d); break; // SUB D
+        case 0x93: handle_SUB(state, &state->a, state->e); break; // SUB E
+        case 0x94: handle_SUB(state, &state->a, state->h); break; // SUB H
+        case 0x95: handle_SUB(state, &state->a, state->l); break; // SUB L
+        case 0x96: handle_SUB(state, &state->a, read_HL(state)); break; // SUB M
+        case 0x97: handle_SUB(state, &state->a, state->a); break; // SUB A
+
+        // SBB cases
+        case 0x98: handle_SBB(state, &state->a, state->b); break; // SBB B
+        case 0x99: handle_SBB(state, &state->a, state->c); break; // SBB C
+        case 0x9a: handle_SBB(state, &state->a, state->d); break; // SBB D
+        case 0x9b: handle_SBB(state, &state->a, state->e); break; // SBB E
+        case 0x9c: handle_SBB(state, &state->a, state->h); break; // SBB H
+        case 0x9d: handle_SBB(state, &state->a, state->l); break; // SBB L
+        case 0x9e: handle_SBB(state, &state->a, read_HL(state)); break; // SBB M
+        case 0x9f: handle_SBB(state, &state->a, state->a); break; // SBB A
+
+        // ANA cases
+        case 0xa0: handle_ANA(state, state->b); break; // ANA B
+        case 0xa1: handle_ANA(state, state->c); break; // ANA C
+        case 0xa2: handle_ANA(state, state->d); break; // ANA D
+        case 0xa3: handle_ANA(state, state->e); break; // ANA E
+        case 0xa4: handle_ANA(state, state->h); break; // ANA H
+        case 0xa5: handle_ANA(state, state->l); break; // ANA L
+        case 0xa6: handle_ANA(state, read_HL(state)); break; // ANA M
+        case 0xa7: handle_ANA(state, state->a); break; // ANA A
         
-        // XRA case
-        case 0xaf:                                                  // XRA A
-            state->a = state->a ^ state->a;
-            flags_logicA(state);
-            break;
+        // XRA cases
+        case 0xa8: handle_XRA(state, state->b); break; // XRA B
+        case 0xa9: handle_XRA(state, state->c); break; // XRA C
+        case 0xaa: handle_XRA(state, state->d); break; // XRA D
+        case 0xab: handle_XRA(state, state->e); break; // XRA E
+        case 0xac: handle_XRA(state, state->h); break; // XRA H
+        case 0xad: handle_XRA(state, state->l); break; // XRA L
+        case 0xae: handle_XRA(state, read_HL(state)); break; // XRA M
+        case 0xaf: handle_XRA(state, state->a); break; // XRA A
+
+        // ORA cases
+        case 0xb0: handle_ORA(state, state->b); break; // ORA B
+        case 0xb1: handle_ORA(state, state->c); break; // ORA C
+        case 0xb2: handle_ORA(state, state->d); break; // ORA D
+        case 0xb3: handle_ORA(state, state->e); break; // ORA E
+        case 0xb4: handle_ORA(state, state->h); break; // ORA H
+        case 0xb5: handle_ORA(state, state->l); break; // ORA L
+        case 0xb6: handle_ORA(state, read_HL(state)); break; // ORA M
+        case 0xb7: handle_ORA(state, state->a); break; // ORA A
 
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
@@ -594,6 +691,18 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc = (opcode[2] << 8) | opcode[1];
             else
                 state->pc += 2;
+            break;
+
+        // XTHL case
+        case 0xe3:
+            {
+                uint8_t h = state->h;
+                uint8_t l = state->l;
+                state->l = state->memory[state->sp];
+                state->h = state->memory[state->sp+1];
+                write_memory(state, state->sp, l);
+                write_memory(state, state->sp+1, h);
+            }
             break;
 
         // JP case
@@ -707,7 +816,40 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xd7: generateInterrupt(state, 2); break;
         case 0xdf: generateInterrupt(state, 3); break;
         case 0xe7: generateInterrupt(state, 4); break;
+
+        // RPE case
+        case 0xe8: 
+            if (state->cc.p == 1) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
+            }
+            break;
+        
+        // PCHL case
+        case 0xe9:
+            state->pc = (state->h << 8) | state->l;
+            break;
+
+        // XRI case
+        case 0xee:
+            {
+                state->a = state->a ^ opcode[1];
+                flags_logicA(state);
+                state->pc++;
+            }
+            break;
+
+        // RST 5 case
         case 0xef: generateInterrupt(state, 5); break;
+
+        // RP case
+        case 0xf0:
+            if (state->cc.s == 0) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
+            }
+            break;
+
         case 0xf7: generateInterrupt(state, 6); break;
         case 0xff: generateInterrupt(state, 7); break;
 
