@@ -392,6 +392,10 @@ int emulate_8080cpu(state_8080cpu *state) {
             state->a = ~state->a;
             break;
 
+        // CMC case
+        case 0x3f:
+            state->cc.cy = ~state->cc.cy; break;
+
         // STA case
         case 0x32:
             {
@@ -731,12 +735,13 @@ int emulate_8080cpu(state_8080cpu *state) {
 			state->sp += 2;
 			break;
 
+        // OUT case
+        case 0xd3: state->pc++; break;
+
+        // CALL cases
         // CALL case
         case 0xcd:
             handle_CALL(1); break;
-        
-        // OUT case
-        case 0xd3: state->pc++; break;
 
         // CNZ case:
         case 0xc4:
@@ -762,11 +767,11 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xdc:
             handle_CALL(state->cc.cy == 1); break;
 
-        // CPO case
+        // CPE case
         case 0xec:
             handle_call(state->cc.p == 1); break;
 
-        // CP case
+        // CM case
         case 0xfc:
             handle_call(state->cc.s == 1); break;
 
