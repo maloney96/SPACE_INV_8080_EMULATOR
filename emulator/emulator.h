@@ -25,6 +25,8 @@ uint8_t read_HL(state_8080cpu *state);
 
 void write_HL(state_8080cpu *state, uint8_t value);
 
+void handle_CALL(uint8_t conditional, state_8080cpu* state, uint8_t *opcode);
+
 void handle_DAD(uint8_t reg_h, uint8_t reg_l, state_8080cpu *state);
 
 void handle_DCR(uint8_t *reg, state_8080cpu *state);
