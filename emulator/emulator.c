@@ -818,7 +818,40 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xd7: generateInterrupt(state, 2); break;
         case 0xdf: generateInterrupt(state, 3); break;
         case 0xe7: generateInterrupt(state, 4); break;
+
+        // RPE case
+        case 0xe8: 
+            if (state->cc.p == 1) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
+            }
+            break;
+        
+        // PCHL case
+        case 0xe9:
+            state->pc = (state->h << 8) | state->l;
+            break;
+
+        // XRI case
+        case 0xee:
+            {
+                state->a = state->a ^ opcode[1];
+                flags_logicA(state);
+                state->pc++;
+            }
+            break;
+
+        // RST 5 case
         case 0xef: generateInterrupt(state, 5); break;
+
+        // RP case
+        case 0xf0:
+            if (state->cc.s == 0) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
+            }
+            break;
+
         case 0xf7: generateInterrupt(state, 6); break;
         case 0xff: generateInterrupt(state, 7); break;
 
