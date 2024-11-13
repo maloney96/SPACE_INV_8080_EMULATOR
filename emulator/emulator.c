@@ -606,6 +606,14 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xb6: handle_ORA(state, read_HL(state)); break; // ORA M
         case 0xb7: handle_ORA(state, state->a); break; // ORA A
 
+        // ORI case
+        case 0xf6: {
+            state->a |= opcode[1];
+            flags_zerosignparity(state, state->a);
+            state->cc.cy = 0;
+            state->pc += 1;
+        }
+
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
         case 0xb9: {uint16_t res = (uint16_t) state->a - (uint16_t) state->c; flags_arithA(state, res);} break; //CMP C
@@ -824,10 +832,23 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->sp += 2;
             }
             break;
-        
+
+        // RM case
+        case 0xf8:
+            if (state->cc.s == 1) {
+                state->pc = state->memory[state->sp] | (state->memory[state->sp+1]<<8);
+                state->sp += 2;
+            }
+            break;
+
         // PCHL case
         case 0xe9:
             state->pc = (state->h << 8) | state->l;
+            break;
+
+        // SPHL case
+        case 0xf9:
+            state->sp = (state->h << 8) | state->l;
             break;
 
         // XRI case
