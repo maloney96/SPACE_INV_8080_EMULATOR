@@ -52,6 +52,22 @@ void unimplemented_instruction(state_8080cpu *state) {
     exit(EXIT_FAILURE);
 };
 
+// Simulates interrupts seen in 8080 CPU
+void generateInterrupt(state_8080cpu* state, int interrupt_num)
+{
+    printf("Generating interrupt %d\n", interrupt_num);
+
+    //perform "PUSH PC"
+    printf("Pushing Program Counter: %04x\n", state->pc);
+    uint16_t ret = state->pc;
+    write_memory(state, state->sp-1, (ret >> 8) & 0xff);
+    write_memory(state, state->sp-2, (ret & 0xff));
+    state->sp = state->sp - 2;
+    //Set the PC to the low memory vector.
+    //This is identical to an "RST interrupt_num" instruction.
+    state->pc = 8 * interrupt_num;
+}
+
 // Various helper functions to aid in instruction execution
 
 // Updates arithmetic flags
@@ -117,6 +133,23 @@ void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
 
 // Functions for handling multiple instances of similar instructions
 
+void handle_ADC(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value + state->cc.cy;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+}
+
+void handle_ADD(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg + value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
+};
+
+void handle_ANA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a & value;
+    flags_logicA(state);
+};
+
 void handle_CALL(uint8_t conditional, state_8080cpu* state, uint8_t* opcode) {
     if (conditional) {
         uint16_t ret = state->pc+2;
@@ -152,10 +185,9 @@ void handle_DCX(uint8_t *high, uint8_t *low) {
     }
 };
 
-void handle_LXI(uint8_t *high, uint8_t *low, uint8_t *opcode, state_8080cpu *state) {
-    *low = opcode[1];
-    *high = opcode[2];
-    state->pc += 2;
+void handle_INR(state_8080cpu *state, uint8_t *reg) {
+    (*reg) += 1;
+    flags_zerosignparity(state, *reg);
 };
 
 void handle_INX(uint8_t *high, uint8_t *low) {
@@ -165,9 +197,10 @@ void handle_INX(uint8_t *high, uint8_t *low) {
     }
 };
 
-void handle_INR(state_8080cpu *state, uint8_t *reg) {
-    (*reg) += 1;
-    flags_zerosignparity(state, *reg);
+void handle_LXI(uint8_t *high, uint8_t *low, uint8_t *opcode, state_8080cpu *state) {
+    *low = opcode[1];
+    *high = opcode[2];
+    state->pc += 2;
 };
 
 void handle_MOVwithMemory(uint8_t *reg, state_8080cpu *state, int direction) {
@@ -180,28 +213,21 @@ void handle_MVI(uint8_t *reg, uint8_t *opcode, state_8080cpu *state) {
     state->pc++;
 };
 
+void handle_ORA(state_8080cpu *state, uint8_t value) {
+    state->a = state->a | value;
+    flags_logicA(state);
+};
+
 void handle_POP(uint8_t  *high, uint8_t *low, state_8080cpu *state) {
     *low = state->memory[state->sp];
     *high = state->memory[state->sp + 1];
     state->sp += 2;
 };
 
-void handle_ADD(state_8080cpu *state, uint8_t *reg, uint8_t value) {
-    uint16_t res = (uint16_t) *reg + value;
-    flags_arithA(state, res);
-    *reg = res & 0xff;
-};
-
-void handle_ADC(state_8080cpu *state, uint8_t *reg, uint8_t value) {
-    uint16_t res = (uint16_t) *reg + value + state->cc.cy;
-    flags_arithA(state, res);
-    *reg = res & 0xff;
-}
-
-void handle_SUB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
-    uint16_t res = (uint16_t) *reg - value;
-    flags_arithA(state, res);
-    *reg = res & 0xff;
+void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
+    state->memory[state->sp - 1] = high;
+    state->memory[state->sp - 2] = low;
+    state->sp -= 2;
 };
 
 void handle_SBB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
@@ -210,25 +236,15 @@ void handle_SBB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
     *reg = res & 0xff;
 };
 
-void handle_ANA(state_8080cpu *state, uint8_t value) {
-    state->a = state->a & value;
-    flags_logicA(state);
+void handle_SUB(state_8080cpu *state, uint8_t *reg, uint8_t value) {
+    uint16_t res = (uint16_t) *reg - value;
+    flags_arithA(state, res);
+    *reg = res & 0xff;
 };
 
 void handle_XRA(state_8080cpu *state, uint8_t value) {
     state->a = state->a ^ value;
     flags_logicA(state);
-};
-
-void handle_ORA(state_8080cpu *state, uint8_t value) {
-    state->a = state->a | value;
-    flags_logicA(state);
-};
-
-void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
-    state->memory[state->sp - 1] = high;
-    state->memory[state->sp - 2] = low;
-    state->sp -= 2;
 };
 
 // main emulator loop
@@ -997,17 +1013,3 @@ int emulate_8080cpu(state_8080cpu *state) {
     return cycles;
 };
 
-void generateInterrupt(state_8080cpu* state, int interrupt_num)
-{
-    printf("Generating interrupt %d\n", interrupt_num);
-
-    //perform "PUSH PC"
-    printf("Pushing Program Counter: %04x\n", state->pc);
-    uint16_t ret = state->pc;
-    write_memory(state, state->sp-1, (ret >> 8) & 0xff);
-    write_memory(state, state->sp-2, (ret & 0xff));
-    state->sp = state->sp - 2;
-    //Set the PC to the low memory vector.
-    //This is identical to an "RST interrupt_num" instruction.
-    state->pc = 8 * interrupt_num;
-}
