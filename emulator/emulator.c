@@ -77,6 +77,7 @@ void flags_arithA(state_8080cpu *state, uint16_t res) {
     state->cc.p = parity(res&0xff, 8);
 };
 
+// Updates zero, sign, and parity CPU flags
 void flags_zerosignparity(state_8080cpu *state, uint8_t value) {
     state->cc.z = (value == 0);
     state->cc.s = (0x80 == (value & 0x80));
@@ -93,6 +94,7 @@ void write_HL(state_8080cpu *state, uint8_t value) {
     write_memory(state, offset, value); 
 };
 
+// Calculates parity of integer. Returns 0 if number of 1 bits in x is odd, 1 if even
 int parity(int x, int size) {
 	int i;
 	int p = 0;
@@ -220,32 +222,17 @@ void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
 };
 
 int emulate_8080cpu(state_8080cpu *state) {
-	unsigned char *opcode = &state->memory[state->pc];
+	unsigned char *opcode = &state->memory[state->pc]; // Fetch opcode
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
 
-	disassemble_opcode(state->memory, state->pc);
+	disassemble_opcode(state->memory, state->pc); // Print human-readable version of opcode
 	
 	state->pc+=1;	
 
+    // Execute Instruction
     switch (*opcode) {
         // NOP
         case 0x00: break;
-
-        // DCR cases
-        case 0x05: handle_DCR(&state->b, state); break; // DCR B
-        case 0x0d: handle_DCR(&state->c, state); break; // DCR C
-        case 0x15: handle_DCR(&state->d, state); break; // DCR D
-        case 0x1d: handle_DCR(&state->e, state); break; // DCR E
-        case 0x25: handle_DCR(&state->h, state); break; // DCR H
-        case 0x2d: handle_DCR(&state->l, state); break; // DCR L
-        case 0x35: 							            // DCR M
-			{
-                uint8_t res = read_HL(state) - 1;
-                flags_zerosignparity(state, res);
-                write_HL(state, res);
-            }
-            break;
-        case 0x3d: handle_DCR(&state->a, state); break; // DCR A
 
         // LXI cases
         case 0x01: handle_LXI(&state->b, &state->c, opcode, state); break; // LXI B, word
@@ -285,6 +272,22 @@ int emulate_8080cpu(state_8080cpu *state) {
             }
             break;
         case 0x3c: handle_INR(state, &state->a); break; // INR A
+
+        // DCR cases
+        case 0x05: handle_DCR(&state->b, state); break; // DCR B
+        case 0x0d: handle_DCR(&state->c, state); break; // DCR C
+        case 0x15: handle_DCR(&state->d, state); break; // DCR D
+        case 0x1d: handle_DCR(&state->e, state); break; // DCR E
+        case 0x25: handle_DCR(&state->h, state); break; // DCR H
+        case 0x2d: handle_DCR(&state->l, state); break; // DCR L
+        case 0x35: 							            // DCR M
+			{
+                uint8_t res = read_HL(state) - 1;
+                flags_zerosignparity(state, res);
+                write_HL(state, res);
+            }
+            break;
+        case 0x3d: handle_DCR(&state->a, state); break; // DCR A
 
         // MVI cases
         case 0x06: handle_MVI(&state->b, opcode, state); break; // MVI B, byte
