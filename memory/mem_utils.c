@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "mem_utils.h"
 #include <stdint.h>
+#include "../inputmanager/debugwrapper.h"
 
 void print_ram_contents(uint8_t *ram, size_t size, const char *filename) {
     FILE *output = stdout;
@@ -12,7 +13,7 @@ void print_ram_contents(uint8_t *ram, size_t size, const char *filename) {
         }
     }
 
-    fprintf(output, "Memory map:\n");
+    qdebug_log("Memory map:\n");
     
     // Loop through the memory and print it based on address ranges
     for (size_t i = 0; i < size; i++) {

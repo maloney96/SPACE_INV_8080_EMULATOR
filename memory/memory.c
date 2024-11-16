@@ -1,6 +1,7 @@
 #include "memory.h"
 #include <stdio.h>
 #include <string.h>
+#include "../inputmanager/debugwrapper.h"
 
 mem_block_t *create_mem_block(int size) {
     mem_block_t *mem = malloc(sizeof(mem_block_t));
@@ -14,7 +15,7 @@ void load_rom(mem_block_t *mem, const char *file_name) {
     // Open file
     FILE *f = fopen(file_name, "rb");
     if (!f) {
-        printf("Could not open ROM: %s\n", file_name);
+        qdebug_log("Could not open ROM: %s\n", file_name);
         exit(1);
     }
     // Get file size
@@ -24,7 +25,7 @@ void load_rom(mem_block_t *mem, const char *file_name) {
 
     // Ensure the memory block is large enough
     if (fsize > mem->size) {
-        printf("ROM size exceeds available memory size.\n");
+        qdebug_log("ROM size exceeds available memory size.\n");
         fclose(f);
         exit(1);
     }

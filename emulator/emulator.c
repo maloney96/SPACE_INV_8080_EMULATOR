@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "emulator.h"
 #include "../disassembler/disassembler.h"
+#include "../inputmanager/debugwrapper.h"
 
 const uint8_t cycles_8080[256] = {
     4, 10, 7, 5, 5, 7, 4, 4,  // 0x00 - 0x07
@@ -44,20 +45,20 @@ void unimplemented_instruction(state_8080cpu *state) {
     state->pc--; // Undo PC increment
 
     // Display error message along with the disassembled instruction
-    fprintf(stderr, "Error: No instruction implemented at address %04x: ", state->pc);
+    qdebug_log("Error: No instruction implemented at address %04x: ", state->pc);
     disassemble_opcode(state->memory, state->pc);  // Show the problematic instruction
-    fprintf(stderr, "\n");
+    qdebug_log("\n");
 
     exit(EXIT_FAILURE);
 };
 
 void write_memory(state_8080cpu *state, uint16_t address, uint8_t value) {
     if (address < 0x2000) {
-        printf("Writing ROM not allowed on %x\n", address);
+       qdebug_log("Writing ROM not allowed on %x\n", address);
         return;
      }
      if (address >= 0x4000) {
-        printf("Writing out of Space Invaders ROM not allowed on %x\n", address);
+        qdebug_log("Writing out of Space Invaders ROM not allowed on %x\n", address);
         return;
      }
      state->memory[address] = value;
@@ -771,7 +772,7 @@ int emulate_8080cpu(state_8080cpu *state) {
             case 1: state->a = state->ioports.read01; break;
             case 2: state->a = state->ioports.read02; break;
             case 3: state->a = state->ioports.read03; break;
-            default: fprintf(stderr, "IN command - unrecognized port %d", opcode[1]);
+            default: qdebug_log("IN command - unrecognized port %d", opcode[1]);
             }
             state->pc++;
             break;
@@ -986,10 +987,10 @@ int emulate_8080cpu(state_8080cpu *state) {
         
     }
     // Print Tab
-    printf("\t");
+    qdebug_log("\t");
     
     // Print Register Values and Flags
-    printf("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
+    qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
        state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
        state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.', 
        state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
@@ -999,10 +1000,10 @@ int emulate_8080cpu(state_8080cpu *state) {
 
 void generateInterrupt(state_8080cpu* state, int interrupt_num)
 {
-    printf("Generating interrupt %d\n", interrupt_num);
+    qdebug_log("Generating interrupt %d\n", interrupt_num);
 
     //perform "PUSH PC"
-    printf("Pushing Program Counter: %04x\n", state->pc);
+    qdebug_log("Pushing Program Counter: %04x\n", state->pc);
     uint16_t ret = state->pc;
     write_memory(state, state->sp-1, (ret >> 8) & 0xff);
     write_memory(state, state->sp-2, (ret & 0xff));

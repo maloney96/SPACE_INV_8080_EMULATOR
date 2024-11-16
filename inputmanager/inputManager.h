@@ -1,26 +1,31 @@
 //
 // Created by Colin Cummins on 10/20/24.
-// Proccesses game inputs and routes to emulator
+// Processes game inputs and routes them to the emulator
 //
 
 /*
  * Modified by Ian McCubbin, 10/25/24
  * - Modified to singleton class
- * - Reclassified gameplay keypress functions as public (need to be accessed via mainwindow)
+ * - Reclassified gameplay keypress functions as public (need to be accessed via MainWindow)
+ *
+ * Modified by Ian McCubbin, 10/28/24
+ * - Integrated EmulatorWrapper initialization directly into InputManager.
  */
+
 #ifndef INPUTMANAGER_H
 #define INPUTMANAGER_H
 
 #include <QObject>  // Include QObject for threading
 #include <QDebug>
 #include "../emulator/ioports_t.h"
+#include "../emulator/emulatorWrapper.h"  // Include EmulatorWrapper for integration
 
 class InputManager : public QObject  // Inherit from QObject
 {
     Q_OBJECT  // Enable Qt's meta-object system for QObject features
 
 public:
-    // Pointer to interrupts in emulator
+    // Pointer to IO ports in emulator
     ioports_t* ioports_ptr {nullptr};
 
     // Static method to get the singleton instance
@@ -28,11 +33,14 @@ public:
 
     static void destroyInstance();
 
-    // Delete copy constructor and assignment operator
+    // Delete copy constructor and assignment operator to enforce singleton pattern
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
-    // Actions Triggered By User Input (keyboard, joystick, etc)
+    // Pointer to EmulatorWrapper, initialized when InputManager is created
+    EmulatorWrapper* emulatorWrapper {nullptr};
+
+    // Actions Triggered By User Input (keyboard, joystick, etc.)
     // Key down
     void moveLeft();
     void moveRight();
@@ -48,8 +56,8 @@ public:
     void p1ButtonKeyup();
     void p2ButtonKeyup();
     void fireButtonKeyup();
-    void exitGameKeyup(); //Unused because exiting the game will destroy emulator and io ports along with it
     void insertCoinKeyup();
+
 private:
     // Private constructor (singleton pattern)
     InputManager();
@@ -60,11 +68,9 @@ private:
     // Static pointer to hold the singleton instance
     static InputManager* instance;
 
-
-    // Special commands to change game settings through 1 or more dip switches
+    // Commands to change game settings via DIP switches
     void setLives(int numLives);
     void setExtraLife(int extraLifeAt);
-
 };
 
 #endif // INPUTMANAGER_H
