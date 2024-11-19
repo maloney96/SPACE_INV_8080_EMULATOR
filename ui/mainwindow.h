@@ -110,13 +110,14 @@ private:
     QThread outputManagerThread;         ///< Thread for running the OutputManager.
     OutputManager* outputManager = nullptr;  ///< Pointer to the OutputManager instance.
     QTimer* frameTimer;                 ///< Pointer to Timer for updating gameframes.
+    PixelWidget *pixelWidget = nullptr;       ///< Pointer to the OpenGL widget for rendering the game.
 
     bool isGameRunning = false;         ///< Flag indicating if the game is currently running.
 
     QMap<QString, int> keyMappings;     ///< Map storing key mappings for game controls.
     QVector<int> keycodes;              ///< Vector storing key codes for quick access.
 
-    PixelWidget *pixelWidget = nullptr;       ///< Pointer to the OpenGL widget for rendering the game.
+
 
     /**
      * @brief Loads key mappings from a JSON file or uses default mappings.
@@ -148,7 +149,12 @@ private:
      *
      * This function hides and deletes the OpenGL widget used for rendering the game.
      */
-    void removeOpenGLWidget();
+    void removePixelWidget();
+
+    /**
+     * @brief Stops retrieving frame updates
+     */
+    void stopFrameUpdates();
 
 };
 

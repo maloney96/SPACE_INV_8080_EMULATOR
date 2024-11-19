@@ -40,9 +40,9 @@
 
 /**
  * @brief Constructs the MainWindow object.
- * 
+ *
  * Initializes the user interface, sets up button connections, and initializes member variables.
- * 
+ *
  * @param parent Pointer to the parent widget, default is nullptr.
  */
 MainWindow::MainWindow(QWidget *parent)
@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // load UI file
     ui->setupUi(this);
-    setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    setMinimumSize(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT);
 
 
     // assembles .ROM file from segragated files.
@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 /**
  * @brief Destructor for MainWindow.
- * 
+ *
  * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
  */
 MainWindow::~MainWindow()
@@ -129,7 +129,7 @@ MainWindow::~MainWindow()
 
 /**
  * @brief Loads key mappings from a JSON file or sets default mappings.
- * 
+ *
  * Checks for the existence of a `.keymap.json` file in the current directory. If the file exists,
  * it loads the key mappings from it. If not, it sets the default key mappings and optionally saves
  * them to a new file.
@@ -174,7 +174,7 @@ void MainWindow::loadKeyMappings()
 
 /**
  * @brief Saves the current key mappings to a JSON file.
- * 
+ *
  * Writes the current key mappings to a `.keymap.json` file in the current directory.
  */
 void MainWindow::saveKeyMappings()

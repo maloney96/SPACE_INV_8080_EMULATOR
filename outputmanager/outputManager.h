@@ -7,7 +7,7 @@
 /**
  * @brief A singleton class that manages the game's video output.
  *
- * This class handles the rendering of frames and provides access to the video emulator.
+ * This class handles rendering frames and provides access to the VideoEmulator.
  */
 class OutputManager : public QObject
 {
@@ -19,7 +19,7 @@ public:
      *
      * If the instance does not exist, it is created.
      *
-     * @return A pointer to the singleton OutputManager instance.
+     * @return Pointer to the singleton OutputManager instance.
      */
     static OutputManager* getInstance();
 
@@ -36,14 +36,16 @@ public:
 
     /**
      * @brief Updates the video frame.
+     *
+     * Fetches the current video frame from the EmulatorWrapper.
      */
     Q_INVOKABLE void updateFrame();
 
     /**
      * @brief Accessor for the VideoEmulator instance.
-     * @return Pointer to the VideoEmulator.
+     * @return Reference to the VideoEmulator.
      */
-    Q_INVOKABLE VideoEmulator* getVideoEmulator();
+    Q_INVOKABLE const VideoEmulator& getVideoEmulator() const;
 
 private:
     /**
@@ -61,7 +63,7 @@ private:
      */
     static OutputManager* instance;
 
-    VideoEmulator emulator; ///< Holds video memory data
+    VideoEmulator emulator; ///< VideoEmulator instance for managing video frames
 };
 
 #endif // OUTPUTMANAGER_H

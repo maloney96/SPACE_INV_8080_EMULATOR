@@ -35,7 +35,7 @@ set(PROJECT_SOURCES
 
 
         outputmanager/outputManager.cpp outputmanager/outputManager.h
-        outputmanager/videoemulator.c outputmanager/videoemulator.h
+        outputmanager/videoemulator.cpp outputmanager/videoemulator.h
 
         disassembler/disassembler.c disassembler/disassembler.h
         emulator/emulator.c emulator/emulator.h
@@ -43,14 +43,15 @@ set(PROJECT_SOURCES
         emulator/io_bits.h emulator/ioports_t.h
         memory/mem_utils.c memory/mem_utils.h
         memory/memory.c memory/memory.h
+
+        ui/pixelwidget.cpp ui/pixelwidget.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SpaceInvadersEmulator
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        ui/pixelwidget.cpp
-        ui/pixelwidget.h
+
     )
 
 # Define target properties for Android with Qt 6 as:
