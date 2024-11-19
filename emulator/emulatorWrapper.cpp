@@ -163,3 +163,8 @@ void EmulatorWrapper::dummyIOportReader() {
     }
 }
 
+uint8_t* EmulatorWrapper::getVideoMemory() {
+    // Video memory starts at address 0x2400
+    return &state.memory[0x2400];
+}
+

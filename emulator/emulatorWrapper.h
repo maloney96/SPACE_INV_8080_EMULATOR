@@ -31,6 +31,8 @@ public:
 
     ioports_t* getIOptr();
 
+    uint8_t* getVideoMemory();
+
 public slots:
     void startEmulation();
     void runCycle();
