@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+Created by Ian McCubbin, 10/25/2024
+// Settings page used to set game controls.
+-->
+
 <ui version="4.0">
  <class>Settings</class>
  <widget class="QDialog" name="Settings">

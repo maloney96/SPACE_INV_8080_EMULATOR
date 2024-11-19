@@ -3,11 +3,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "disassembler.h"
+#include "../inputmanager/debugwrapper.h"
 
 int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
     unsigned char *code = &opcode_buffer[pc];
     int opbytes = 1;
-    printf("%04x ", pc);
+    qdebug_log("%04x ", pc);
 
     const char *mov_cases[] = {
         "MOV B,B", "MOV B,C", "MOV B,D", "MOV B,E", "MOV B,H", "MOV B,L", "MOV B,M", "MOV B,A",
@@ -62,7 +63,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x28: 
         case 0x30: 
         case 0x38:
-            printf("NOP");
+            qdebug_log("NOP");
             break;
 
         // LXI cases
@@ -70,7 +71,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x11:
         case 0x21:
         case 0x31:
-            printf("LXI %s,#$%02x%02x", 
+            qdebug_log("LXI %s,#$%02x%02x",
             (*code == 0x01) ? "B" : (*code == 0x11) ? "D" : (*code == 0x21) ? "H" : "SP",
             code[2],
             code[1]);
@@ -80,7 +81,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         // STAX cases
         case 0x02:
         case 0x12:
-            printf("STAX %s", 
+            qdebug_log("STAX %s",
             (*code == 0x02) ? "B" : "D");
             break;
         
@@ -89,7 +90,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x13:
         case 0x23:
         case 0x33:
-            printf("INX %s", 
+            qdebug_log("INX %s",
             (*code == 0x03) ? "B" : (*code == 0x13) ? "D" : (*code == 0x23) ? "H" : "SP");
             break;
         
@@ -102,7 +103,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x2c:
         case 0x34:
         case 0x3c:
-            printf("INR %s", 
+            qdebug_log("INR %s",
             (*code == 0x04) ? "B" : (*code == 0x0c) ? "C" : (*code == 0x14) ? "D" : (*code == 0x1c) ? "E" : 
             (*code == 0x24) ? "H" : (*code == 0x2c) ? "L" : (*code == 0x34) ? "M" : "SP");
             break;
@@ -116,7 +117,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x2d:
         case 0x35:
         case 0x3d:
-            printf("DCR %s", 
+            qdebug_log("DCR %s",
             (*code == 0x05) ? "B" : (*code == 0x0d) ? "C" : (*code == 0x15) ? "D" : (*code == 0x1d) ? "E" : 
             (*code == 0x25) ? "H" : (*code == 0x2d) ? "L" : (*code == 0x35) ? "M" : "SP");
             break;
@@ -130,7 +131,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x2e:
         case 0x36:
         case 0x3e:
-            printf("MVI %s,#$%02x",
+            qdebug_log("MVI %s,#$%02x",
             (*code == 0x06) ? "B" : (*code == 0x0e) ? "C" : (*code == 0x16) ? "D" : (*code == 0x1e) ? "E" : 
             (*code == 0x26) ? "H" : (*code == 0x2e) ? "L" : (*code == 0x36) ? "M" : "SP",
             code[1]);
@@ -142,14 +143,14 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x19:
         case 0x29:
         case 0x39:
-            printf("DAD %s", 
+            qdebug_log("DAD %s",
             (*code == 0x09) ? "B" : (*code == 0x19) ? "D" : (*code == 0x29) ? "H" : "SP");
             break;
         
         // LDAX cases
         case 0x0a:
         case 0x1a:
-            printf("LDAX %s", 
+            qdebug_log("LDAX %s",
             (*code == 0x0a) ? "B" : "D");
             break;
 
@@ -158,23 +159,23 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x1b:
         case 0x2b:
         case 0x3b:
-            printf("DCX %s", 
+            qdebug_log("DCX %s",
             (*code == 0x0b) ? "B" : (*code == 0x1b) ? "D" : (*code == 0x2b) ? "H" : "SP");
             break;
 
         // One-off cases between 0x00 - 0x40:
-        case 0x22: printf("SHLD $%02x%02x", code[2], code[1]); opbytes=3; break;
-        case 0x32: printf("STA  $%02x%02x", code[2], code[1]); opbytes=3; break;
-        case 0x07: printf("RLC"); break;
-        case 0x17: printf("RAL"); break;
-        case 0x27: printf("DAA"); break;
-        case 0x37: printf("STC"); break;
-        case 0x0f: printf("RRC"); break;
-        case 0x1f: printf("RAR"); break;
-        case 0x2a: printf("LHLD $%02x%02x", code[2], code[1]); opbytes=3; break;
-        case 0x2f: printf("CMA"); break;
-        case 0x3a: printf("LDA $%02x%02x", code[2], code[1]); opbytes=3; break;
-        case 0x3f: printf("CMC"); break;
+        case 0x22: qdebug_log("SHLD $%02x%02x", code[2], code[1]); opbytes=3; break;
+        case 0x32: qdebug_log("STA  $%02x%02x", code[2], code[1]); opbytes=3; break;
+        case 0x07: qdebug_log("RLC"); break;
+        case 0x17: qdebug_log("RAL"); break;
+        case 0x27: qdebug_log("DAA"); break;
+        case 0x37: qdebug_log("STC"); break;
+        case 0x0f: qdebug_log("RRC"); break;
+        case 0x1f: qdebug_log("RAR"); break;
+        case 0x2a: qdebug_log("LHLD $%02x%02x", code[2], code[1]); opbytes=3; break;
+        case 0x2f: qdebug_log("CMA"); break;
+        case 0x3a: qdebug_log("LDA $%02x%02x", code[2], code[1]); opbytes=3; break;
+        case 0x3f: qdebug_log("CMC"); break;
 
         // MOV cases
         case 0x40:
@@ -241,7 +242,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
 	case 0x7d:
 	case 0x7e:
 	case 0x7f:
-            printf("%s", mov_cases[*code - 0x40]);
+            qdebug_log("%s", mov_cases[*code - 0x40]);
             break;
 
         // ADD cases
@@ -253,7 +254,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x85:
         case 0x86:
         case 0x87:
-            printf("%s", add_cases[*code - 0x80]);
+            qdebug_log("%s", add_cases[*code - 0x80]);
             break;
         
         // ADC cases
@@ -265,7 +266,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x8d:
         case 0x8e:
         case 0x8f:
-            printf("%s", adc_cases[*code - 0x88]);
+            qdebug_log("%s", adc_cases[*code - 0x88]);
             break;
         
         // SUB cases
@@ -277,7 +278,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x95:
         case 0x96:
         case 0x97:
-            printf("%s", sub_cases[*code - 0x90]);
+            qdebug_log("%s", sub_cases[*code - 0x90]);
             break;
         
         // SBB cases 
@@ -289,7 +290,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0x9d:
         case 0x9e:
         case 0x9f:
-            printf("%s", sbb_cases[*code - 0x98]);
+            qdebug_log("%s", sbb_cases[*code - 0x98]);
             break;
         
         // ANA cases
@@ -301,7 +302,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xa5:
         case 0xa6:
         case 0xa7:
-            printf("%s", ana_cases[*code - 0xa0]);
+            qdebug_log("%s", ana_cases[*code - 0xa0]);
             break;
 
         // XRA cases
@@ -313,7 +314,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xad:
         case 0xae:
         case 0xaf:
-            printf("%s", xra_cases[*code - 0xa8]);
+            qdebug_log("%s", xra_cases[*code - 0xa8]);
             break;
 
         // ORA cases
@@ -325,7 +326,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xb5:
         case 0xb6:
         case 0xb7:
-            printf("%s", ora_cases[*code - 0xb0]);
+            qdebug_log("%s", ora_cases[*code - 0xb0]);
             break;
 
         // CMP cases
@@ -337,7 +338,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xbd:
         case 0xbe:
         case 0xbf:
-            printf("%s", cmp_cases[*code - 0xb8]);
+            qdebug_log("%s", cmp_cases[*code - 0xb8]);
             break; 
         
         // POP cases
@@ -345,7 +346,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xd1:
         case 0xe1:
         case 0xf1:
-            printf("POP %s", 
+            qdebug_log("POP %s",
             (*code == 0xc1) ? "B" : (*code == 0xd1) ? "D" : (*code == 0xe1) ? "H" : "SP");
             break;
         
@@ -354,7 +355,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xd5:
         case 0xe5:
         case 0xf5:
-            printf("PUSH %s", 
+            qdebug_log("PUSH %s",
             (*code == 0xc5) ? "B" : (*code == 0xd5) ? "D" : (*code == 0xe5) ? "H" : "SP");
             break;
         
@@ -367,7 +368,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xef:
         case 0xf7:
         case 0xff:
-            printf("RST %s",
+            qdebug_log("RST %s",
             (*code == 0xc7) ? "0" : (*code == 0xcf) ? "1" : (*code == 0xd7) ? "2" : (*code == 0xdf) ? "3" : 
             (*code == 0xe7) ? "4" : (*code == 0xef) ? "5" : (*code == 0xf7) ? "6" : "7");
             break;
@@ -395,7 +396,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xfa:
         case 0xfc:
         case 0xfd:
-            printf("%s $%02x%02x", 
+            qdebug_log("%s $%02x%02x",
             (*code == 0xc2) ? "JNZ" : (*code == 0xc3) ? "JMP" : (*code == 0xc4) ? "CNZ" : (*code == 0xca) ? "JZ" :
             (*code == 0xcb) ? "JMP" : (*code == 0xcc) ? "CZ" : (*code == 0xcd) ? "CALL" : (*code == 0xd2) ? "JNC" :
             (*code == 0xd4) ? "CNC" : (*code == 0xda) ? "JC" : (*code == 0xdc) ? "CC" : (*code == 0xdd) ? "CALL" :
@@ -417,7 +418,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         case 0xee:
         case 0xf6:
         case 0xfe:
-            printf("%s $%02x", 
+            qdebug_log("%s $%02x",
             (*code == 0xc6) ? "ADI" : (*code == 0xce) ? "ACI" : (*code == 0xd3) ? "OUT" : (*code == 0xd6) ? "SUI" :
             (*code == 0xdb) ? "IN" : (*code == 0xde) ? "SBI" : (*code == 0xe6) ? "ANI" : (*code == 0xee) ? "XRI" :
             (*code == 0xf6) ? "ORI" : "CPI",
@@ -426,22 +427,22 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
             break;
 
         // One-off cases between 0xc0 - 0xff:
-        case 0xc0: printf("RNZ"); break;
-        case 0xc8: printf("RZ"); break;
-	case 0xc9: printf("RET"); break;
-        case 0xd0: printf("RNC"); break;
-        case 0xd8: printf("RC");  break;
-	case 0xd9: printf("RET"); break;
-        case 0xe0: printf("RPO"); break;
-        case 0xe3: printf("XTHL"); break;
-        case 0xe8: printf("RPE"); break;
-	case 0xe9: printf("PCHL"); break;
-        case 0xeb: printf("XCHG"); break;
-        case 0xf0: printf("RP");  break;
-        case 0xf3: printf("DI");  break;
-        case 0xf8: printf("RM");  break;
-	case 0xf9: printf("SPHL"); break;
-        case 0xfb: printf("EI");  break;
+        case 0xc0: qdebug_log("RNZ"); break;
+        case 0xc8: qdebug_log("RZ"); break;
+    case 0xc9: qdebug_log("RET"); break;
+        case 0xd0: qdebug_log("RNC"); break;
+        case 0xd8: qdebug_log("RC");  break;
+    case 0xd9: qdebug_log("RET"); break;
+        case 0xe0: qdebug_log("RPO"); break;
+        case 0xe3: qdebug_log("XTHL"); break;
+        case 0xe8: qdebug_log("RPE"); break;
+    case 0xe9: qdebug_log("PCHL"); break;
+        case 0xeb: qdebug_log("XCHG"); break;
+        case 0xf0: qdebug_log("RP");  break;
+        case 0xf3: qdebug_log("DI");  break;
+        case 0xf8: qdebug_log("RM");  break;
+    case 0xf9: qdebug_log("SPHL"); break;
+        case 0xfb: qdebug_log("EI");  break;
     }
 
     return opbytes;

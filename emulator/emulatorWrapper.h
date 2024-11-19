@@ -27,17 +27,17 @@ public:
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
 
+    void cleanup();
+
     ioports_t* getIOptr();
 
 public slots:
     void startEmulation();
-
     void runCycle();
 
 private:
     // Private constructor (singleton pattern)
     EmulatorWrapper();
-
     // Private destructor
     ~EmulatorWrapper();
 
@@ -50,11 +50,8 @@ private:
     void dummyIOportReader();
 
     mem_block_t *ram;
-
     state_8080cpu state;
-
     std::chrono::high_resolution_clock::time_point previous_timepoint;
-
     uint8_t interrupt_toggle;
 };
 

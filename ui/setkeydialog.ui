@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Created by Ian McCubbin, 10/28/2024
+  Dialog box used to set user controls for gameplay.
+-->
 <ui version="4.0">
  <class>SetKeyDialog</class>
  <widget class="QDialog" name="SetKeyDialog">

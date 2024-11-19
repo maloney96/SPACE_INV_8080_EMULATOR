@@ -1,18 +1,16 @@
-//
-// Created by Colin Cummins on 10/20/24.
-//
-
 /*
+ * Created by Colin Cummins on 10/20/24.
  * Modified by Ian McCubbin, 10/25/24
  * -  Modified to singleton class so that the manager only has one instance running
  * -  Enabled QDebug statements
  * -  moved bypassKey function (handled in mainwindow)
  * -  moved processKeystroke function(handled in mainwindow)
-*/
+ */
 
-#include "../inputmanager/inputManager.h"
+#include "../inputManager/inputManager.h"
 #include "../emulator/io_bits.h"
 
+// Initialize the static instance ptr to nullptr
 InputManager* InputManager::instance = nullptr;
 
 // Static method to get the singleton instance
@@ -23,6 +21,11 @@ InputManager& InputManager::getInstance() {
     return *instance;
 }
 
+/**
+ * @brief Destroys the singleton instance of InputManager.
+ *
+ * This method should be called when the InputManager is no longer needed.
+ */
 void InputManager::destroyInstance() {
     if (instance != nullptr) {
         delete instance;  // Delete the singleton instance
@@ -31,40 +34,103 @@ void InputManager::destroyInstance() {
     }
 }
 
-// Private constructor
+/**
+ * @brief Private constructor for the singleton pattern.
+ *
+ * Initializes the InputManager. This constructor is private to prevent
+ * direct instantiation, ensuring that only one instance exists.
+ */
 InputManager::InputManager() {
-    // Constructor body
+    // Get the singleton EmulatorWrapper instance
+    emulatorWrapper = &EmulatorWrapper::getInstance();
+    ioports_ptr = emulatorWrapper->getIOptr();
+
+    qDebug() << "InputManager ioports_ptr linked to EmulatorWrapper.";
+
+    // Move EmulatorWrapper to a separate thread
+    emulatorWrapper->moveToThread(&emulatorThread);
+
+    // Connect signal to start emulation
+    connect(this, &InputManager::startEmulatorSignal, emulatorWrapper, &EmulatorWrapper::startEmulation, Qt::QueuedConnection);
+
+    // Start the thread
+    emulatorThread.start();
+
+    qDebug() << "InputManager initialized with EmulatorWrapper running in a separate thread.";
+
+    // Emit signal to start emulation after setup is complete
+    QMetaObject::invokeMethod(this, "startEmulatorSignal", Qt::QueuedConnection);
 }
 
-// Destructor
-InputManager::~InputManager() { qDebug() << "InputManager destroyed"; }
+/**
+ * @brief Destructor for InputManager.
+ *
+ * Cleans up resources used by the InputManager. This destructor is private
+ * to control the destruction of the singleton instance.
+ */
+InputManager::~InputManager() {
+    EmulatorWrapper::getInstance().cleanup();  // Destroy the EmulatorWrapper
+    qDebug() << "EmulatorWrapper singleton destroyed by InputManager";
+}
 
-// Methods for handling input keystrokes
-// When a key is pressed, the corresponding ioport bit is set
-// When a key is release, the corresponding ioport bit is cleared
-// This way the io port object always has a picture of what inputs are currently live so the emulator can read them with an IN opcode
-
+/**
+ * @brief Moves the player to the left.
+ *
+ * This function processes the input to move the player character to the left.
+ */
 void InputManager::moveLeft() {
+    qDebug() << "Move left";
     ioports_ptr->read01 |= P1LEFT;
 }
 
+/**
+ * @brief Moves the player to the right.
+ *
+ * This function processes the input to move the player character to the right.
+ */
 void InputManager::moveRight() {
+    qDebug() << "Move right";
     ioports_ptr->read01 |= P1RIGHT;
 }
 
+/**
+ * @brief Triggers the first player's button press.
+ *
+ * This function processes the input corresponding to the first player's action button.
+ */
 void InputManager::p1Button() {
+    qDebug() << "P1 Button";
     ioports_ptr->read01 |= P1START;
 }
 
+/**
+ * @brief Triggers the second player's button press.
+ *
+ * This function processes the input corresponding to the second player's action button.
+ */
 void InputManager::p2Button() {
+    qDebug() << "P2 Button";
     ioports_ptr->read01 |= P2START;
 }
 
+/**
+ * @brief Triggers the fire button press.
+ *
+ * This function processes the input corresponding to the fire action.
+ */
 void InputManager::fireButton() {
+    qDebug() << "Fire Button";
     ioports_ptr->read01 |= P1SHOT;
 }
 
+
+/**
+ * @brief Simulates a coin insert.
+ *
+ * This function processes the input to simulate inserting a coin into the game.
+ */
 void InputManager::insertCoin() {
+    qDebug() << "Coin Inserted";
     ioports_ptr->read01 |= CREDIT;
 }
 
@@ -73,7 +139,7 @@ void InputManager::moveLeftKeyup() {
     ioports_ptr->read01 &= ~P1LEFT;
 }
 
-void InputManager::moveRightKeyup(){
+void InputManager::moveRightKeyup() {
     ioports_ptr->read01 &= ~P1RIGHT;
 }
 
@@ -93,8 +159,11 @@ void InputManager::insertCoinKeyup() {
     ioports_ptr->read01 &= ~CREDIT;
 }
 
-// Special keydown command for exiting the game
+/**
+ * @brief Exits the game.
+ *
+ * This function processes the input to exit the game.
+ */
 void InputManager::exitGame(){
-    //TODO This may need to signal the emulator in some way outside the interrupt scheme
     qDebug() << "Game Exited";
 }

@@ -13,6 +13,11 @@
  *  Modified by Ian McCubbin, 10/28/2024
  *  - Added ability to read keymap.json to set game key controls.
  *
+ *  Modified by Ian McCubbin, 11/2/2024
+ *  - Added glWidget controls
+ *
+ *  Modified by Ian McCubbin, 11/9/2024
+ *  - BUGFIX- implemented resize method override for GLWidget
 */
 
 #include "mainwindow.h"
@@ -20,6 +25,9 @@
 #include "instructions.h"
 #include "settings.h"
 #include "../inputmanager/keymap.h"
+#include "../outputmanager/outputManager.h"
+#include "../outputmanager/videoemulator.h"
+#include "../inputmanager/romassembler.h"
 
 #include <QDebug>
 #include <QFile>
@@ -27,18 +35,31 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QKeySequence>
+#include <QTimer>
+#include <QResizeEvent>
 
-
+/**
+ * @brief Constructs the MainWindow object.
+ * 
+ * Initializes the user interface, sets up button connections, and initializes member variables.
+ * 
+ * @param parent Pointer to the parent widget, default is nullptr.
+ */
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , keycodes(7)
-    , inputManager(nullptr)  // Initialize InputManager pointer to nullptr
-    , emulatorWrapper(nullptr)  // Initialize InputManager pointer to nullptr
+    , inputManager(nullptr)
+    , outputManager(nullptr)
+    , frameTimer(new QTimer(this))
 {
     // load UI file
     ui->setupUi(this);
+    setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
+
+    // assembles .ROM file from segragated files.
+    RomAssembler r = RomAssembler();
 
     // Connect the buttons to their respective slots
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
@@ -46,22 +67,74 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonInstructions, &QPushButton::clicked, this, &MainWindow::onButtonInstructionsClicked);
 }
 
+
+/**
+ * @brief Destructor for MainWindow.
+ * 
+ * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
+ */
 MainWindow::~MainWindow()
 {
-    // kills emulator Input Manager
+    qDebug() << "MainWindow destructor called.";
+
+    // Stop frame timer if active
+    if (frameTimer && frameTimer->isActive()) {
+        frameTimer->stop();
+        delete frameTimer;
+        frameTimer = nullptr;
+        qDebug() << "Frame timer stopped and deleted.";
+    }
+
+    // Clean up InputManager thread
     if (inputManagerThread.isRunning()) {
+        qDebug() << "Terminating InputManager thread.";
         inputManagerThread.quit();
-        inputManagerThread.wait();  // Wait for the thread to finish before deleting
+        inputManagerThread.wait();
     }
-    if (emulatorWrapperThread.isRunning()) {
-        emulatorWrapperThread.quit();
-        emulatorWrapperThread.wait();  // Wait for the thread to finish before deleting
+
+    // Destroy InputManager instance safely
+    if (inputManager) {
+        QMetaObject::invokeMethod(inputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        inputManager = nullptr;
+        qDebug() << "InputManager destroyed.";
     }
+
+    // Clean up OutputManager thread
+    if (outputManagerThread.isRunning()) {
+        qDebug() << "Terminating OutputManager thread.";
+        outputManagerThread.quit();
+        outputManagerThread.wait();
+    }
+
+    // Destroy OutputManager instance safely
+    if (outputManager) {
+        QMetaObject::invokeMethod(outputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        outputManager = nullptr;
+        qDebug() << "OutputManager destroyed.";
+    }
+
+    // Clean up OpenGL widget
+    if (glWidget) {
+        glWidget->hide();
+        delete glWidget;
+        glWidget = nullptr;
+        qDebug() << "GLWidget destroyed.";
+    }
+
+    // Clean up UI
     delete ui;
+    qDebug() << "MainWindow cleanup complete.";
 }
 
 
-// load keymappings from json file, if it exists, otherwise use default keymap
+
+/**
+ * @brief Loads key mappings from a JSON file or sets default mappings.
+ * 
+ * Checks for the existence of a `.keymap.json` file in the current directory. If the file exists,
+ * it loads the key mappings from it. If not, it sets the default key mappings and optionally saves
+ * them to a new file.
+ */
 void MainWindow::loadKeyMappings()
 {
     // set keymap path (file will be available after build).
@@ -100,7 +173,11 @@ void MainWindow::loadKeyMappings()
     }
 }
 
-// save keymap configuration to json file
+/**
+ * @brief Saves the current key mappings to a JSON file.
+ * 
+ * Writes the current key mappings to a `.keymap.json` file in the current directory.
+ */
 void MainWindow::saveKeyMappings()
 {
     // set keymap path.
@@ -125,7 +202,14 @@ void MainWindow::saveKeyMappings()
     }
 }
 
-// Overriding the standard keyPressEvent function to process all game related keystrokes when game is running
+/**
+ * @brief Handles key press events.
+ *
+ * This function overrides the default key press event handler to process game-related keystrokes when the game is running.
+ * It maps specific keys to corresponding actions in the InputManager.
+ *
+ * @param event Pointer to the QKeyEvent object containing details of the key press event.
+ */
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     int key = event->key();
@@ -153,6 +237,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
             inputManager->destroyInstance();
 
+            if (frameTimer->isActive()) {
+                frameTimer->stop();
+            }
+
             // terminate openGL widget
             if (glWidget) {
                 glWidget->hide();
@@ -174,7 +262,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 }
 
 
-// Overriding the standard keyReleaseEvent function to process all game related keystrokes when game is running
 void MainWindow::keyReleaseEvent(QKeyEvent *event)
 {
     int key = event->key();
@@ -193,16 +280,17 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 }
 
 
-// Event after Play Game is clicked
-// hides/disables all navigation buttons
-// instantiates input manager instance (new thread)
-// gets the defined keymap, if any.  If not- use default keys from keymap.h.
-// instantiates an openGL widget.
+/**
+ * @brief Slot triggered when the "Play Game" button is clicked.
+ *
+ * This function initializes the game environment by hiding navigation buttons, setting up the InputManager in a separate thread,
+ * loading key mappings, and displaying the OpenGL widget for the game.
+ */
 void MainWindow::onButtonPlayClicked()
 {
     qDebug() << "Play Game button clicked! Starting the game...";
 
-    // Hide all buttons
+    // Hide navigation buttons and setup the game environment
     ui->buttonPlay->hide();
     ui->buttonPlay->setEnabled(false);
     ui->buttonInstructions->hide();
@@ -210,48 +298,57 @@ void MainWindow::onButtonPlayClicked()
     ui->buttonSettings->hide();
     ui->buttonSettings->setEnabled(false);
 
-    // Set the frame background color to black
     this->setStyleSheet("background-image: none;");
     ui->frame->setStyleSheet("background-color: black;");
 
-    // Start the InputManager and EmulatorWrapper, each in a separate thread
-    // Get the key mappings from file- if it doesn't exist, make a file with default keys
     loadKeyMappings();
 
-    // Start the InputManager in a separate thread
     if (!isGameRunning) {
-        emulatorWrapper = &EmulatorWrapper::getInstance();  // Get the singleton instance
-        emulatorWrapper->moveToThread(&emulatorWrapperThread);  // Move InputManager to its own thread
-        emulatorWrapperThread.start();  // Start the thread
-
-        inputManager = &InputManager::getInstance();  // Get the singleton instance
-        inputManager->ioports_ptr = emulatorWrapper->getIOptr(); // Input manager needs to manipulate io ports
-        inputManager->moveToThread(&inputManagerThread);  // Move InputManager to its own thread
-        inputManagerThread.start();  // Start the thread
-        isGameRunning = true;  // Set game running flag
-
-        QMetaObject::invokeMethod(emulatorWrapper, "startEmulation", Qt::QueuedConnection); //Start emulation loop inside the wrapper thread
+        inputManager = &InputManager::getInstance();
+        inputManager->moveToThread(&inputManagerThread);
+        inputManagerThread.start();
+        isGameRunning = true;
     }
 
-    if(!glWidget) {
+    if (!glWidget) {
         glWidget = new GLWidget(ui->frame);
         glWidget->setGeometry(ui->frame->rect());
         glWidget->show();
     }
+
+    if (!outputManager) {
+        outputManager = OutputManager::getInstance();
+        outputManager->moveToThread(&outputManagerThread);
+        outputManagerThread.start();
+
+        // Connect frame updates to rendering
+        connect(frameTimer, &QTimer::timeout, this, [&]() {
+            QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
+            glWidget->renderFrame(outputManager->getVideoEmulator());
+        });
+        frameTimer->start(16);  // Roughly 60 FPS
+    }
 }
 
-// Event after settings button is clicked.
-// brings up modal settings pop-up
+
+/**
+ * @brief Slot triggered when the "Settings" button is clicked.
+ *
+ * This function opens the settings dialog, allowing the user to configure game settings.
+ */
 void MainWindow::onButtonSettingsClicked()
 {
     qDebug() << "Settings button clicked! Opening settings...";
-    // Add your settings logic here
     Settings settingsDialog(this);
+    // Show the dialog in a modal way (it will block the main window until closed)
     settingsDialog.exec();
 }
 
-// Event after instuctions button is clicked
-// brings up Instructions pop-up
+/**
+ * @brief Slot triggered when the "Instructions" button is clicked.
+ *
+ * This function opens the instructions dialog, providing the user with game instructions.
+ */
 void MainWindow::onButtonInstructionsClicked()
 {
     qDebug() << "Instructions button clicked! Showing instructions...";
@@ -261,4 +358,19 @@ void MainWindow::onButtonInstructionsClicked()
 
     // Show the dialog in a modal way (it will block the main window until closed)
     instructionsDialog.exec();
+}
+
+/**
+ * @brief Slot triggered when the "Instructions" button is clicked.
+ *
+ * This function opens the instructions dialog, providing the user with game instructions.
+ */
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);  // Call the base class implementation
+
+    // If GLWidget exists, resize it to match the size of the frame
+    if (glWidget) {
+        glWidget->setGeometry(ui->frame->rect());
+    }
 }

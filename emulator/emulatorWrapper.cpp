@@ -92,6 +92,14 @@ void EmulatorWrapper::runCycle() {
     };
 }
 
+
+void EmulatorWrapper::cleanup() {
+    running=false;
+    delete instance;  // Destroy the singleton instance
+    instance = nullptr;
+    qDebug() << "EmulatorWrapper cleanup completed";
+}
+
 // Function to start the emulator loop
 void EmulatorWrapper::startEmulation() {
     running = true;

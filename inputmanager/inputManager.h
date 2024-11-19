@@ -13,53 +13,111 @@
 
 #include <QObject>  // Include QObject for threading
 #include <QDebug>
+#include <QThread>
+#include "../emulator/emulatorWrapper.h"
 #include "../emulator/ioports_t.h"
 
+
+/**
+ * @brief A singleton class that manages game input.
+ *
+ * This class handles input from the user (keyboard, joystick, etc.) and routes it to the emulator.
+ * It is implemented as a singleton to ensure that only one instance of the InputManager exists.
+ */
 class InputManager : public QObject  // Inherit from QObject
 {
     Q_OBJECT  // Enable Qt's meta-object system for QObject features
 
 public:
-    // Pointer to interrupts in emulator
-    ioports_t* ioports_ptr {nullptr};
 
-    // Static method to get the singleton instance
+
+
+     /**
+     * @brief Gets the singleton instance of the InputManager.
+     *
+     * If the instance does not exist, it is created.
+     *
+     * @return A reference to the singleton InputManager instance.
+     */
     static InputManager& getInstance();
 
+    /**
+     * @brief Destroys the singleton instance of the InputManager.
+     *
+     * This method should be called when the InputManager is no longer needed.
+     */
     static void destroyInstance();
 
     // Delete copy constructor and assignment operator
     InputManager(const InputManager&) = delete;
     InputManager& operator=(const InputManager&) = delete;
 
-    // Actions Triggered By User Input (keyboard, joystick, etc)
-    // Key down
+    /**
+     * @brief Moves the player to the left.
+     */
     void moveLeft();
+    
+    /**
+     * @brief Moves the player to the right.
+     */    
     void moveRight();
+    
+    /**
+     * @brief Triggers the first player's button press.
+     */
     void p1Button();
+
+    /**
+     * @brief Triggers the second player's button press.
+     */    
     void p2Button();
+
+    /**
+     * @brief Triggers the fire button press.
+     */    
     void fireButton();
-    void exitGame();
+
+    /*
+    * @brief Simulates a coin insert
+    */
     void insertCoin();
 
-    // Key up
+    /*
+    * @brief exits the game
+    */
+    void exitGame();
+
     void moveLeftKeyup();
     void moveRightKeyup();
     void p1ButtonKeyup();
     void p2ButtonKeyup();
     void fireButtonKeyup();
-    void exitGameKeyup(); //Unused because exiting the game will destroy emulator and io ports along with it
     void insertCoinKeyup();
+
+signals:
+    void startEmulatorSignal();
+
 private:
-    // Private constructor (singleton pattern)
+
+    /**
+     * @brief Private constructor for the singleton pattern.
+     */
     InputManager();
 
-    // Private destructor
+    /**
+    * @brief Private destructor for the singleton pattern.
+    */
     ~InputManager();
 
-    // Static pointer to hold the singleton instance
+    /**
+     * @brief Static pointer to hold the singleton instance.
+     */
     static InputManager* instance;
 
+    EmulatorWrapper* emulatorWrapper;
+    QThread emulatorThread;
+
+    ioports_t* ioports_ptr {nullptr};
 
     // Special commands to change game settings through 1 or more dip switches
     void setLives(int numLives);

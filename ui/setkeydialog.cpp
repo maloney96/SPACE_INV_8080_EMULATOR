@@ -1,8 +1,17 @@
-#include "setkeydialog.h"
+// Created by Ian McCubbin, 10/28/2024
+// Dialog box used to set user controls for gameplay.
+
+#include "SetKeyDialog.h"
 #include "ui_SetKeyDialog.h"  // Include the generated UI header file
 #include <QMessageBox>
 
-// Constructor
+/**
+ * @brief Constructor for SetKeyDialog.
+ * @param action The name of the action to reassign.
+ * @param currentKey The current key assigned to the action.
+ * @param keyMappings A map of existing key assignments.
+ * @param parent The parent widget.
+ */
 SetKeyDialog::SetKeyDialog(const QString &action, int currentKey, const QMap<QString, int> &keyMappings, QWidget *parent)
     : QDialog(parent), ui(new Ui::SetKeyDialog), actionName(action), currentKey(currentKey), keyMappings(keyMappings)
 {
@@ -18,12 +27,17 @@ SetKeyDialog::SetKeyDialog(const QString &action, int currentKey, const QMap<QSt
     connect(ui->cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 }
 
-// Destructor to clean up the UI
+/**
+ * @brief Destructor for SetKeyDialog.
+ */
 SetKeyDialog::~SetKeyDialog() {
     delete ui;
 }
 
-// Override keyPressEvent to capture key press
+/**
+ * @brief Captures and processes key press events for reassigning keys.
+ * @param event The key event.
+ */
 void SetKeyDialog::keyPressEvent(QKeyEvent *event)
 {
     int newKey = event->key();  // Get the pressed key
@@ -58,4 +72,8 @@ void SetKeyDialog::keyPressEvent(QKeyEvent *event)
     accept();
 }
 
+/**
+ * @brief Retrieves the newly assigned key.
+ * @return The reassigned key code.
+ */
 int SetKeyDialog::getReassignedKey() const { return reassignedKey; }
