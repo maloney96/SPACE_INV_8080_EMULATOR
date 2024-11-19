@@ -8,7 +8,7 @@
 #include "settings.h"
 #include "ui_settings.h"
 #include "setkeydialog.h"
-#include "..\inputmanager\keymap.h"
+#include "../inputmanager/keymap.h"
 
 #include <QDir>
 #include <QFile>

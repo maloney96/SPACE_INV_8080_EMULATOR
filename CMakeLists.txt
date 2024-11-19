@@ -32,7 +32,7 @@ set(PROJECT_SOURCES
         ui/mainwindow.cpp ui/mainwindow.h ui/mainwindow.ui
         ui/settings.h ui/settings.cpp ui/settings.ui
         ui/setkeydialog.h ui/setkeydialog.cpp ui/setkeydialog.ui
-        ui/glwidget.h ui/glwidget.cpp
+
 
         outputmanager/outputManager.cpp outputmanager/outputManager.h
         outputmanager/videoemulator.c outputmanager/videoemulator.h
@@ -48,7 +48,9 @@ set(PROJECT_SOURCES
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SpaceInvadersEmulator
         MANUAL_FINALIZATION
-        ${PROJECT_SOURCES} 
+        ${PROJECT_SOURCES}
+        ui/pixelwidget.cpp
+        ui/pixelwidget.h
     )
 
 # Define target properties for Android with Qt 6 as:

@@ -25,7 +25,7 @@
 #include <QOpenGLWidget>
 #include <QTimer>
 
-#include "glwidget.h"
+#include "pixelwidget.h"
 #include "../inputManager/inputManager.h"
 #include "../outputmanager/outputManager.h"
 
@@ -116,7 +116,7 @@ private:
     QMap<QString, int> keyMappings;     ///< Map storing key mappings for game controls.
     QVector<int> keycodes;              ///< Vector storing key codes for quick access.
 
-    GLWidget *glWidget = nullptr;       ///< Pointer to the OpenGL widget for rendering the game.
+    PixelWidget *pixelWidget = nullptr;       ///< Pointer to the OpenGL widget for rendering the game.
 
     /**
      * @brief Loads key mappings from a JSON file or uses default mappings.

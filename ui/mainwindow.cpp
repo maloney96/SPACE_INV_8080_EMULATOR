@@ -113,12 +113,11 @@ MainWindow::~MainWindow()
         qDebug() << "OutputManager destroyed.";
     }
 
-    // Clean up OpenGL widget
-    if (glWidget) {
-        glWidget->hide();
-        delete glWidget;
-        glWidget = nullptr;
-        qDebug() << "GLWidget destroyed.";
+    // Clean up PixelWidget
+    if (!pixelWidget) {
+        pixelWidget = new PixelWidget(ui->frame);
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
     }
 
     // Clean up UI
@@ -241,11 +240,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 frameTimer->stop();
             }
 
-            // terminate openGL widget
-            if (glWidget) {
-                glWidget->hide();
-                delete glWidget;
-                glWidget = nullptr;
+            // terminate pixelWidget
+            if (pixelWidget) {
+                pixelWidget->hide();
+                delete pixelWidget;
+                pixelWidget = nullptr;
             }
 
             // restore navigation buttons and background
@@ -310,10 +309,10 @@ void MainWindow::onButtonPlayClicked()
         isGameRunning = true;
     }
 
-    if (!glWidget) {
-        glWidget = new GLWidget(ui->frame);
-        glWidget->setGeometry(ui->frame->rect());
-        glWidget->show();
+    if (!pixelWidget) {
+        pixelWidget = new PixelWidget(ui->frame);
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
     }
 
     if (!outputManager) {
@@ -324,7 +323,7 @@ void MainWindow::onButtonPlayClicked()
         // Connect frame updates to rendering
         connect(frameTimer, &QTimer::timeout, this, [&]() {
             QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
-            glWidget->renderFrame(outputManager->getVideoEmulator());
+            pixelWidget->renderFrame(outputManager->getVideoEmulator());
         });
         frameTimer->start(16);  // Roughly 60 FPS
     }
@@ -369,8 +368,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);  // Call the base class implementation
 
-    // If GLWidget exists, resize it to match the size of the frame
-    if (glWidget) {
-        glWidget->setGeometry(ui->frame->rect());
+    // If PixelWidget  exists, resize it to match the size of the frame
+    if (pixelWidget) {
+        pixelWidget->setGeometry(ui->frame->rect());
     }
 }
