@@ -25,6 +25,8 @@ void PixelWidget::updatePixelData(const VideoEmulator& emulator) {
 
     qDebug() << "Updating pixel data...";
 
+
+
     for (int y = 0; y < VideoEmulator::SCREEN_HEIGHT; ++y) {
         for (int x = 0; x < VideoEmulator::SCREEN_WIDTH; ++x) {
             int pixelState = emulator.getPixel(x, y);
@@ -38,6 +40,7 @@ void PixelWidget::updatePixelData(const VideoEmulator& emulator) {
             image.setPixel(x, y, color);
         }
     }
+
 }
 
 void PixelWidget::paintEvent(QPaintEvent *event) {

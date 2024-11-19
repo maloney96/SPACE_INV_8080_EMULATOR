@@ -14,7 +14,7 @@ int VideoEmulator::getPixel(int x, int y) const {
     if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
         return 0; // Out of bounds; treat as "off"
     }
-    int byteIndex = (x * SCREEN_HEIGHT + y) / 8;
+    int byteIndex = (x * SCREEN_HEIGHT + 256 - y) / 8;
     int bitIndex = y % 8;
     return (memory[byteIndex] >> (7 - bitIndex)) & 1;
 }
