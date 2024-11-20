@@ -50,6 +50,10 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
     state.ioports.write05 = 0;
     state.ioports.write06 = 0;
 
+    //Shift registers for bit shifting hardware
+    shift0 = 0; //Low register
+    shift1 = 0; //High register
+
     // Initialize timer for interrupts
     previous_timepoint = std::chrono::high_resolution_clock::now();
     interrupt_toggle = 0; // 0 = middle of screen, 1 = bottom of screen
@@ -79,9 +83,61 @@ const VideoEmulator* EmulatorWrapper::getVideoEmulator() const {
     return videoEmulator;
 }
 
+// Special handling for OUT instructions
+void EmulatorWrapper::handleOUT(unsigned char* opcode) {
+    switch(opcode[1]){
+    //Change shift amount
+    case 2:
+        state.ioports.write02 = opcode[2] & 0x7;
+        break;
+    case 3:
+        state.ioports.write03 = opcode[2];
+        break;
+    //Write to shift register
+    case 4:
+        shift0 = shift1;
+        shift1 = state.a;
+        break;
+    case 5:
+        state.ioports.write05 = opcode[2];
+        break;
+    case 6:
+        state.ioports.write05 = opcode[2];
+        break;
+    }
+}
+
+void EmulatorWrapper::handleIN(unsigned char* opcode){
+    switch(opcode[1]){
+    //Regular read of input port
+    case 0: state.a = state.ioports.read00; break;
+    case 1: state.a = state.ioports.read01; break;
+    case 2: state.a = state.ioports.read02; break;
+
+    //Engage bitshifter
+    //Method adapted from Emulator101 code
+    case 3:
+        uint16_t v = (shift1<<8) | shift0;
+        state.ioports.read03 = ((v >> (8-state.ioports.write02)) & 0xff);
+        state.a = state.ioports.read03;
+        break;
+    }
+}
+
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {
+    // Special handling of IN and OUT opcodes here
+    // The emulator still handles the program counter, but the bulk of opcode handling is done in the wrapper
+    // This method adapted from Emulator101 approach
+    unsigned char *opcode = &state.memory[state.pc];
+    if (*opcode == 0xd3) {
+        EmulatorWrapper::handleOUT(opcode);
+    } else if (*opcode == 0xdb){
+        EmulatorWrapper::handleIN(opcode);
+    }
+
     int cycles = emulate_8080cpu(&state);
+
 
     // Simulate time delay based on cycles
     int sleep_time = (cycles * 1000000) / CPU_CLOCK_HZ;

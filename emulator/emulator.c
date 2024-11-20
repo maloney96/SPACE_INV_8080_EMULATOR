@@ -766,17 +766,8 @@ int emulate_8080cpu(state_8080cpu *state) {
             break;
         
         // IN case:
-        case 0xdb:
-            switch(opcode[1]){
-            case 0: state->a = state->ioports.read00; break;
-            case 1: state->a = state->ioports.read01; break;
-            case 2: state->a = state->ioports.read02; break;
-            case 3: state->a = state->ioports.read03; break;
-            default: fprintf(stderr, "IN command - unrecognized port %d", opcode[1]);
-            }
-            state->pc++;
-            break;
-        break;
+        // Mostly handled in the wrapper, but we leave this here so PC gets incremented and we don't trip unidentified opcode error
+        case 0xdb: state->pc++; break;
 
         // SBI case
         case 0xde:
@@ -882,7 +873,8 @@ int emulate_8080cpu(state_8080cpu *state) {
 			break;
 
         // OUT case
-        case 0xd3: state->pc++; break;
+        // Mostly handled in the wrapper, but we leave this here so PC gets incremented and we don't trip unidentified opcode error
+        case 0xd3: state->pc ++; break;
 
         // CALL cases
         // CALL case
