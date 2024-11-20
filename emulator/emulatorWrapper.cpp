@@ -96,7 +96,7 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
     //Write to shift register
     case 4:
         shift0 = shift1;
-        shift1 = opcode[2];
+        shift1 = state.a;
         break;
     case 5:
         state.ioports.write05 = opcode[2];
@@ -115,6 +115,7 @@ void EmulatorWrapper::handleIN(unsigned char* opcode){
     case 2: state.a = state.ioports.read02; break;
 
     //Engage bitshifter
+    //Method adapted from Emulator101 code
     case 3:
         uint16_t v = (shift1<<8) | shift0;
         state.ioports.read03 = ((v >> (8-state.ioports.write02)) & 0xff);
@@ -125,7 +126,9 @@ void EmulatorWrapper::handleIN(unsigned char* opcode){
 
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {
-    // Check for special handling of OUT codes, or else just emulate a regular cycle
+    // Special handling of IN and OUT opcodes here
+    // The emulator still handles the program counter, but the bulk of opcode handling is done in the wrapper
+    // This method adapted from Emulator101 approach
     unsigned char *opcode = &state.memory[state.pc];
     if (*opcode == 0xd3) {
         EmulatorWrapper::handleOUT(opcode);
