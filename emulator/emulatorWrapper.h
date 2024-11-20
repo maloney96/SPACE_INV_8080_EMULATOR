@@ -47,11 +47,21 @@ private:
     bool running;
     void dummyIOportReader();
 
-    // Members
+    // CPU Memory and State
     mem_block_t* ram;
     state_8080cpu state;
+
+    // Interrupt and timing handling
     std::chrono::high_resolution_clock::time_point previous_timepoint;
     uint8_t interrupt_toggle;
+
+    // Used to emulate specialized bitshifting hardware
+    uint8_t shift0;
+    uint8_t shift1;
+
+    // We handle IN and OUT opcodes in the wrapper to avoid introducing extra elements like bitshift hardware into emulator core
+    void handleOUT(unsigned char* opcode);
+    void handleIN(unsigned char* opcode);
 
     // VideoEmulator instance (manages read-only video memory)
     VideoEmulator* videoEmulator;
