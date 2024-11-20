@@ -121,9 +121,7 @@ void EmulatorWrapper::handleIN(unsigned char* opcode){
     //Method adapted from Emulator101 code
     case 3:
         uint16_t v = (shift1<<8) | shift0;
-        state.ioports.read03 = ((v >> (8-state.ioports.write02)) & 0xff);
-        state.a = state.ioports.read03;
-        break;
+        state.a  = ((v >> (8-state.ioports.write02)) & 0xff);        break;
     }
 }
 

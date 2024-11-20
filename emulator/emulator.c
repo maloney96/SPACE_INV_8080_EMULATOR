@@ -224,7 +224,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 	unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
 
-	disassemble_opcode(state->memory, state->pc);
+    //disassemble_opcode(state->memory, state->pc);
 	
 	state->pc+=1;	
 
@@ -979,20 +979,21 @@ int emulate_8080cpu(state_8080cpu *state) {
         
     }
     // Print Tab
-    qdebug_log("\t");
+    //qdebug_log("\t");
     
     // Print Register Values and Flags
-    qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
+    /* qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
        state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
        state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.', 
        state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
+*/
 
     return cycles;
 };
 
 void generateInterrupt(state_8080cpu* state, int interrupt_num)
 {
-    qdebug_log("Generating interrupt %d\n", interrupt_num);
+ //   qdebug_log("Generating interrupt %d\n", interrupt_num);
 
     //perform "PUSH PC"
     qdebug_log("Pushing Program Counter: %04x\n", state->pc);
