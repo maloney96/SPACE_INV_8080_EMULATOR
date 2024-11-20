@@ -126,8 +126,13 @@ void EmulatorWrapper::handleIN(unsigned char* opcode){
 
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {
-    // Special handling of IN and OUT opcodes here
-    // The emulator still handles the program counter, but the bulk of opcode handling is done in the wrapper
+    // Wait if debug paused
+    {
+        std::unique_lock<std::mutex> lock(pauseMutex);
+        pauseCondition.wait(lock, [this]() { return !paused; });
+    }
+  
+    // The bulk of IN/OUT opcode handling is done in the wrapper to keep machine-specific elements out of emulator
     // This method adapted from Emulator101 approach
     unsigned char *opcode = &state.memory[state.pc];
     if (*opcode == 0xd3) {
@@ -170,7 +175,43 @@ void EmulatorWrapper::startEmulation() {
     running = true;
     qDebug() << "Starting emulation...";
     while (running) {
+         // Wait if paused and not stepping
+        {
+            std::unique_lock<std::mutex> lock(pauseMutex);
+            pauseCondition.wait(lock, [this]() { return !paused || stepping; });
+        }
+
         runCycle();
+
+        // If stepping, clear the stepping flag and re-enter pause mode
+        if (stepping) {
+            std::lock_guard<std::mutex> lock(pauseMutex);
+            stepping = false;
+            paused = true;
+        }
+    }
+}
+
+void EmulatorWrapper::pauseEmulation() {
+    std::lock_guard<std::mutex> lock(pauseMutex);
+    paused = true;
+    pauseCondition.notify_all(); // Notify any waiting threads
+    qDebug() << "Emulation paused.";
+}
+
+void EmulatorWrapper::resumeEmulation() {
+    std::lock_guard<std::mutex> lock(pauseMutex);
+    paused = false;
+    pauseCondition.notify_all(); // Notify any waiting threads
+    qDebug() << "Emulation resumed.";
+}
+
+void EmulatorWrapper::stepEmulation() {
+    if (paused) {
+        stepping = true;
+        qDebug() << "Stepping one cycle.";
+    } else {
+        qDebug() << "Cannot step while running. Pause the emulator first.";
     }
 }
 

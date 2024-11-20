@@ -16,6 +16,8 @@
  *  Modified by Ian McCubbin, 10/28/2024
  *  - Added ability to read keymap.json to set game key controls.
  *
+ *  Modified by Noah Freeman, 11/20/2024
+ *  - Added debug pause, step, resume functionality
 */
 
 #include <QMainWindow>
@@ -24,6 +26,7 @@
 #include <QMap>
 #include <QOpenGLWidget>
 #include <QTimer>
+#include <QShortcut>
 
 #include "pixelwidget.h"
 #include "../inputManager/inputManager.h"
@@ -103,6 +106,27 @@ private slots:
      */
     void onButtonInstructionsClicked();
 
+    /**
+     * @brief Slot for handling the Pause button click event.
+     *
+     * Pauses emulator for debugging.
+     */
+    void onButtonPauseClicked();
+
+    /**
+     * @brief Slot for handling the Pause button click event.
+     *
+     * Resumes emulator for debugging.
+     */
+    void onButtonResumeClicked();
+
+    /**
+     * @brief Slot for handling the Pause button click event.
+     *
+     * Emulator moves by a step for debugging.
+     */
+    void onButtonStepClicked();
+
 private:
     Ui::MainWindow *ui;                 ///< Pointer to the UI components.
     QThread inputManagerThread;         ///< Thread for running the InputManager.
@@ -117,7 +141,9 @@ private:
     QMap<QString, int> keyMappings;     ///< Map storing key mappings for game controls.
     QVector<int> keycodes;              ///< Vector storing key codes for quick access.
 
-
+    QShortcut* pauseShortcut;           ///< For debugging pause emulator.
+    QShortcut* resumeShortcut;          ///< For debugging resume emulator.
+    QShortcut* stepShortcut;            ///< For debugging step to next instruction.
 
     /**
      * @brief Loads key mappings from a JSON file or uses default mappings.
