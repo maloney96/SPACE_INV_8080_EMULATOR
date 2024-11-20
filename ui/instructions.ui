@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Created by Ian McCubbin, 10/23/2024
+  Instructions window for Space Invaders Emulator - shows gameplay instructions to user
+-->
 <ui version="4.0">
  <class>Instructions</class>
  <widget class="QDialog" name="Instructions">

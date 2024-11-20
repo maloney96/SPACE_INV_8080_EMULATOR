@@ -1,3 +1,10 @@
+/*  Created by Ian McCubbin, 10/25/2024
+ *  Settings page used to set game controls
+ *
+ *  MODIFIED by Ian McCubbin, 11/9/2024
+ *  BUGFIX- on set default press, currentkey was not updating to reflect deafault keys.
+ */
+
 #include "settings.h"
 #include "ui_settings.h"
 #include "setkeydialog.h"
@@ -15,6 +22,15 @@
 #include <windows.h>
 #endif
 
+/**
+ * @brief Constructor for the Settings dialog.
+ *
+ * The Settings class provides a dialog for configuring user key mappings.
+ * Initializes the dialog, connects signals to slots for key reassignments, 
+ * and loads existing key mappings or sets defaults if unavailable.
+ * 
+ * @param parent Pointer to the parent widget, default is nullptr.
+ */
 Settings::Settings(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::Settings)
@@ -43,8 +59,18 @@ Settings::Settings(QWidget *parent) :
             });
 }
 
+/**
+ * @brief Destructor for the Settings dialog.
+ */
 Settings::~Settings() { delete ui; }
 
+/**
+ * @brief Populates the key fields with current key mappings.
+ * 
+ * Updates the UI fields to display the key assignments from the provided JSON map.
+ * 
+ * @param map JSON object containing the key mappings.
+ */
 void Settings::populateKeyFields(QJsonObject map)
 {
 
@@ -57,6 +83,13 @@ void Settings::populateKeyFields(QJsonObject map)
     ui->lineEditExitGame->setText(QKeySequence(map["exit_game"].toInt()).toString());
 }
 
+/**
+ * @brief Slot to initiate key reassignment.
+ * On OK- save new keymap and exit
+ * On Cancel- restore old keymap and exit
+ * On RestoreDefualts- restore default keys, DO NOT EXIT
+ * @param action The action name whose key assignment is being modified.
+ */
 void Settings::OnDialogButtonBoxClicked(QAbstractButton *button)
 {
     QDialogButtonBox::StandardButton sb = ui->dialogButtonBox->standardButton(button);
@@ -72,6 +105,12 @@ void Settings::OnDialogButtonBoxClicked(QAbstractButton *button)
     }
 }
 
+/**
+ * @brief Sets the default key mappings and updates the UI.
+ * 
+ * Resets the key mappings to their default values, saves them to the keymap file,
+ * and updates the UI fields to reflect these defaults.
+ */
 void Settings::setDefaultKeyMap() {
     // Define the keymap file path
     QString keymapPath = QDir::currentPath() + "/.keymap.json";
@@ -101,8 +140,15 @@ void Settings::setDefaultKeyMap() {
     }
 
     populateKeyFields(defaultKeymapJson);
+    currentKeymap = defaultKeymapJson;
 }
 
+/**
+ * @brief Initializes the key mappings.
+ * 
+ * Loads key mappings from a JSON file if it exists; otherwise, sets default key mappings.
+ * @return A QJsonObject containing the key mappings.
+ */
 QJsonObject Settings::initializeKeyMap()
 {
     QString keymapPath = QDir::currentPath() + "/.keymap.json";  // Hidden file in the home directory
@@ -138,6 +184,11 @@ QJsonObject Settings::initializeKeyMap()
     return keymapJson;
 }
 
+/**
+ * @brief Slot to handle the Cancel button click.
+ * 
+ * Restores the original key mappings and closes the dialog without saving changes.
+ */
 void Settings::onCancelButtonClicked()
 {
     QString keymapPath = QDir::currentPath() + "/.keymap.json";
@@ -166,6 +217,11 @@ void Settings::onCancelButtonClicked()
     reject();
 }
 
+/**
+ * @brief Slot to handle the OK button click.
+ * 
+ * Saves the current key mappings and closes the dialog.
+ */
 void Settings::onOkButtonClicked()
 {
     // Define the keymap file path
@@ -210,8 +266,12 @@ void Settings::onOkButtonClicked()
     accept();
 }
 
-// Slot to handle "Set Move Left" button click
-void Settings::onSetKeyClicked(const QString &action) {
+/**
+ * @brief Slot to handle the "Set Key" button click for a specific action.
+ * @param action The action name whose key assignment is being modified.
+ */
+void Settings::onSetKeyClicked(const QString &action)
+{
     int currentKey = getKeyForAction(action);  // Get the current key for "Move Left"
 
     // Convert currentKeymap to QMap<QString, int>
@@ -229,8 +289,13 @@ void Settings::onSetKeyClicked(const QString &action) {
 }
 
 
-// Get the current key assigned to an action
-int Settings::getKeyForAction(const QString &action) {
+/**
+ * @brief Retrieves the key code associated with a specific action.
+ * @param action The name of the action.
+ * @return The key code assigned to the action.
+ */
+int Settings::getKeyForAction(const QString &action)
+{
     // Check if the action exists in the currentKeymap
     if (currentKeymap.contains(action)) {
         return currentKeymap[action].toInt();  // Return the current key as an integer
@@ -240,8 +305,13 @@ int Settings::getKeyForAction(const QString &action) {
     }
 }
 
-// Update the key mapping for an action
-void Settings::updateKeyForAction(const QString &action, int newKey) {
+/**
+ * @brief Updates the key mapping for a specific action.
+ * @param action The name of the action to update.
+ * @param newKey The new key code to assign to the action.
+ */
+void Settings::updateKeyForAction(const QString &action, int newKey)
+{
     currentKeymap[action] = newKey;  // Update the keymap with the new key
     populateKeyFields(currentKeymap);  // Optionally update the UI to reflect the new key
 }

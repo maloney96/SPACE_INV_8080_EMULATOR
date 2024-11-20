@@ -1,7 +1,13 @@
 <RCC>
     <qresource prefix="/Images">
         <file>images/Celestial.png</file>
-        <file>images/spcaeSky.jpg</file>
+        <file>images/spaceSky.jpg</file>
         <file>images/Wisdom.png</file>
+    </qresource>
+    <qresource prefix="/ROM">
+        <file>ROM/invaders.e</file>
+        <file>ROM/invaders.f</file>
+        <file>ROM/invaders.g</file>
+        <file>ROM/invaders.h</file>
     </qresource>
 </RCC>
