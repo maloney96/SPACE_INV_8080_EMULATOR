@@ -9,6 +9,7 @@
 #define INTERRUPT_INTERVAL 8333333
 #define MEMORY_SIZE 0x10000 // 64KB total memory
 #define CPU_CLOCK_HZ 2000000 // 2 MHz clock speed
+#define NS_PER_CYCLE 500 // Nanoseconds per clock cycle in 8080
 
 // Static member initialization
 EmulatorWrapper* EmulatorWrapper::instance = nullptr;
@@ -55,7 +56,9 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
     shift1 = 0; //High register
 
     // Initialize timer for interrupts
-    previous_timepoint = std::chrono::high_resolution_clock::now();
+    previous_interrupt_time = std::chrono::high_resolution_clock::now();
+    previous_cycle_time = previous_interrupt_time;
+    cycles_used =0;
     interrupt_toggle = 0; // 0 = middle of screen, 1 = bottom of screen
 
     qDebug() << "EmulatorWrapper initialized.";
@@ -131,32 +134,34 @@ void EmulatorWrapper::runCycle() {
         std::unique_lock<std::mutex> lock(pauseMutex);
         pauseCondition.wait(lock, [this]() { return !paused; });
     }
-  
-    // The bulk of IN/OUT opcode handling is done in the wrapper to keep machine-specific elements out of emulator
-    // This method adapted from Emulator101 approach
-    unsigned char *opcode = &state.memory[state.pc];
-    if (*opcode == 0xd3) {
+
+    // Get current time for cycle synchronization and interrupt generation
+    auto current_timepoint = std::chrono::high_resolution_clock::now();
+
+    if (current_timepoint - previous_cycle_time >= std::chrono::nanoseconds(cycles_used * NS_PER_CYCLE)){
+        // Opcode handling and cycle emulation
+        // Carried out if enough time has elapsed since previous cycle
+
+        // The bulk of IN/OUT opcode handling is done in the wrapper to keep machine-specific elements out of emulator
+        // This method adapted from Emulator101 approach
+
+        unsigned char *opcode = &state.memory[state.pc];
+        if (*opcode == 0xd3) {
         EmulatorWrapper::handleOUT(opcode);
-    } else if (*opcode == 0xdb){
+        } else if (*opcode == 0xdb){
         EmulatorWrapper::handleIN(opcode);
+        }
+        cycles_used = emulate_8080cpu(&state);
+        previous_cycle_time = std::chrono::high_resolution_clock::now();
     }
 
-    int cycles = emulate_8080cpu(&state);
-
-
-    // Simulate time delay based on cycles
-    int sleep_time = (cycles * 1000000) / CPU_CLOCK_HZ;
-    std::this_thread::sleep_for(std::chrono::microseconds(sleep_time));
-
     // Handle interrupts
-    auto current_timepoint = std::chrono::high_resolution_clock::now();
-    if ((current_timepoint - previous_timepoint) > std::chrono::nanoseconds(INTERRUPT_INTERVAL)) {
+    if ((current_timepoint - previous_interrupt_time) > std::chrono::nanoseconds(INTERRUPT_INTERVAL)) {
         if (state.int_enable) {
             int interrupt_num = interrupt_toggle + 1; // 1 for mid-screen, 2 for bottom
             generateInterrupt(&state, interrupt_num);
             state.int_enable = false;
-
-            previous_timepoint = current_timepoint;
+            previous_interrupt_time = current_timepoint;
             interrupt_toggle ^= 1; // Toggle interrupt state
         }
     }

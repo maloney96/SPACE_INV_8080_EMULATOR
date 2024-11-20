@@ -57,7 +57,9 @@ private:
     state_8080cpu state;
 
     // Interrupt and timing handling
-    std::chrono::high_resolution_clock::time_point previous_timepoint;
+    std::chrono::high_resolution_clock::time_point previous_interrupt_time;
+    std::chrono::high_resolution_clock::time_point previous_cycle_time;
+    uint8_t cycles_used;
     uint8_t interrupt_toggle;
 
     // Used to emulate specialized bitshifting hardware
