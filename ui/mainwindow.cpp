@@ -18,6 +18,8 @@
  *
  *  Modified by Ian McCubbin, 11/9/2024
  *  - BUGFIX- implemented resize method override for GLWidget
+ *  Modified by Noah Freeman, 11/20/2024
+ *  - Added Pause, Step, Resume functionalities
 */
 
 #include "mainwindow.h"
@@ -37,6 +39,8 @@
 #include <QKeySequence>
 #include <QTimer>
 #include <QResizeEvent>
+#include <QPushButton>
+#include <QShortcut>
 
 /**
  * @brief Constructs the MainWindow object.
@@ -65,6 +69,27 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
     connect(ui->buttonSettings, &QPushButton::clicked, this, &MainWindow::onButtonSettingsClicked);
     connect(ui->buttonInstructions, &QPushButton::clicked, this, &MainWindow::onButtonInstructionsClicked);
+
+    // Manage shortcuts for debug
+    QShortcut* pauseShortcut = new QShortcut(QKeySequence("P"), this);
+    QShortcut* resumeShortcut = new QShortcut(QKeySequence("R"), this);
+    QShortcut* stepShortcut = new QShortcut(QKeySequence("S"), this);
+
+    // Connect the shortcuts to emulator actions
+    connect(pauseShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().pauseEmulation();
+        qDebug() << "Pause shortcut activated!";
+    });
+
+    connect(resumeShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().resumeEmulation();
+        qDebug() << "Resume shortcut activated!";
+    });
+
+    connect(stepShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().stepEmulation();
+        qDebug() << "Step shortcut activated!";
+    });
 }
 
 
@@ -357,6 +382,36 @@ void MainWindow::onButtonInstructionsClicked()
 
     // Show the dialog in a modal way (it will block the main window until closed)
     instructionsDialog.exec();
+}
+
+/**
+ * @brief Slot triggered when "pause" button is clicked.
+ *
+ * This function opens the pause button for debugging.
+ */
+void MainWindow::onButtonPauseClicked() {
+    EmulatorWrapper::getInstance().pauseEmulation();
+    qDebug() << "Pause button clicked!";
+}
+
+/**
+ * @brief Slot triggered when "resume" button is clicked.
+ *
+ * This function opens the resume button for debugging.
+ */
+void MainWindow::onButtonResumeClicked() {
+    EmulatorWrapper::getInstance().resumeEmulation();
+    qDebug() << "Resume button clicked!";
+}
+
+/**
+ * @brief Slot triggered when "step" button is clicked.
+ *
+ * This function opens the step button for debugging.
+ */
+void MainWindow::onButtonStepClicked() {
+    EmulatorWrapper::getInstance().stepEmulation();
+    qDebug() << "Step button clicked!";
 }
 
 /**

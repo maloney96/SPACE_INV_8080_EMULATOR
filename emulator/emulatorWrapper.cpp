@@ -81,6 +81,12 @@ const VideoEmulator* EmulatorWrapper::getVideoEmulator() const {
 
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {
+    // Wait if debug paused
+    {
+        std::unique_lock<std::mutex> lock(pauseMutex);
+        pauseCondition.wait(lock, [this]() { return !paused; });
+    }
+
     int cycles = emulate_8080cpu(&state);
 
     // Simulate time delay based on cycles
@@ -114,7 +120,43 @@ void EmulatorWrapper::startEmulation() {
     running = true;
     qDebug() << "Starting emulation...";
     while (running) {
+         // Wait if paused and not stepping
+        {
+            std::unique_lock<std::mutex> lock(pauseMutex);
+            pauseCondition.wait(lock, [this]() { return !paused || stepping; });
+        }
+
         runCycle();
+
+        // If stepping, clear the stepping flag and re-enter pause mode
+        if (stepping) {
+            std::lock_guard<std::mutex> lock(pauseMutex);
+            stepping = false;
+            paused = true;
+        }
+    }
+}
+
+void EmulatorWrapper::pauseEmulation() {
+    std::lock_guard<std::mutex> lock(pauseMutex);
+    paused = true;
+    pauseCondition.notify_all(); // Notify any waiting threads
+    qDebug() << "Emulation paused.";
+}
+
+void EmulatorWrapper::resumeEmulation() {
+    std::lock_guard<std::mutex> lock(pauseMutex);
+    paused = false;
+    pauseCondition.notify_all(); // Notify any waiting threads
+    qDebug() << "Emulation resumed.";
+}
+
+void EmulatorWrapper::stepEmulation() {
+    if (paused) {
+        stepping = true;
+        qDebug() << "Stepping one cycle.";
+    } else {
+        qDebug() << "Cannot step while running. Pause the emulator first.";
     }
 }
 

@@ -10,6 +10,8 @@
 #include "../memory/mem_utils.h"
 #include "../outputmanager/videoemulator.h"
 #include "ioports_t.h"
+#include <condition_variable>
+#include <mutex>
 
 class EmulatorWrapper : public QObject {
     Q_OBJECT
@@ -34,6 +36,9 @@ public:
 public slots:
     void startEmulation();
     void runCycle();
+    void pauseEmulation();       // Pause emulation
+    void resumeEmulation();      // Resume emulation
+    void stepEmulation();        // Step one cycle
 
 private:
     // Private constructor (singleton pattern)
@@ -55,6 +60,12 @@ private:
 
     // VideoEmulator instance (manages read-only video memory)
     VideoEmulator* videoEmulator;
+
+    // For Emulator debugging controls
+    std::condition_variable pauseCondition;
+    std::mutex pauseMutex;
+    std::atomic<bool> paused;
+    std::atomic<bool> stepping;
 };
 
 #endif // EMULATORWRAPPER_H
