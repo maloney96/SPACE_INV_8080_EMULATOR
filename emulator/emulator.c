@@ -231,7 +231,6 @@ int emulate_8080cpu(state_8080cpu *state) {
         state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
     }
 
-    //disassemble_opcode(state->memory, state->pc);
 	
 	state->pc+=1;	
 
@@ -531,7 +530,6 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x74: handle_MOVwithMemory(&state->h, state, 1); break; // MOV M, H
         case 0x75: handle_MOVwithMemory(&state->l, state, 1); break; // MOV M, L
         //0x76 is HLT
-        case 0x76: break;
         case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV M, A
 
         // DESTINATION A
@@ -620,7 +618,7 @@ int emulate_8080cpu(state_8080cpu *state) {
             flags_zerosignparity(state, state->a);
             state->cc.cy = 0;
             state->pc += 1;
-        }
+        }; break;
 
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
@@ -969,11 +967,13 @@ int emulate_8080cpu(state_8080cpu *state) {
         // CPI case
         case 0xfe:
             {
-                uint8_t x = state->a - opcode[1];
-                state->cc.z = (x == 0);
-                state->cc.s = (0x80 == (x & 0x80));
-                state->cc.p = parity(x, 8);
+                uint8_t inverted = ~opcode[1];
+                uint8_t result = state->a + inverted + 1;
+                state->cc.z = (result == 0);
+                state->cc.s = (0x80 == (result & 0x80));
+                state->cc.p = parity(result, 8);
                 state->cc.cy = (state->a < opcode[1]);
+                qdebug_log("CPI Debug: A=0x%02X, Immediate=0x%02X, Result=0x%02X, CY=%d\n", state->a, opcode[1], result, state->cc.cy);
                 state->pc++;
 			}
 			break;
@@ -1000,7 +1000,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 
 void generateInterrupt(state_8080cpu* state, int interrupt_num)
 {
- //   qdebug_log("Generating interrupt %d\n", interrupt_num);
+    qdebug_log("Generating interrupt %d\n", interrupt_num);
 
     //perform "PUSH PC"
     //qdebug_log("Pushing Program Counter: %04x\n", state->pc);
