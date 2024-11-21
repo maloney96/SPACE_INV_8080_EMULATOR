@@ -144,6 +144,7 @@ void EmulatorWrapper::runCycle() {
 
         // The bulk of IN/OUT opcode handling is done in the wrapper to keep machine-specific elements out of emulator
         // This method adapted from Emulator101 approach
+        previous_cycle_time = current_timepoint;
 
         unsigned char *opcode = &state.memory[state.pc];
         if (*opcode == 0xd3) {
@@ -152,7 +153,6 @@ void EmulatorWrapper::runCycle() {
         EmulatorWrapper::handleIN(opcode);
         }
         cycles_used = emulate_8080cpu(&state);
-        previous_cycle_time = current_timepoint;
     }
 
     // Handle interrupts
