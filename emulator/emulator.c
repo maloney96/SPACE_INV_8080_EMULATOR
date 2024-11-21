@@ -223,8 +223,12 @@ void handle_PUSH(uint8_t high, uint8_t low, state_8080cpu *state) {
 int emulate_8080cpu(state_8080cpu *state) {
 	unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
-    if (state->pc == 0x09d6){
-        qdebug_log("Clearing middle of screen");
+    if (state->pc >= 0x09d6 && state->pc <= 0x09ee){
+        disassemble_opcode(state->memory, state->pc);
+        qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
+        state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
+        state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.',
+        state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
     }
 
     //disassemble_opcode(state->memory, state->pc);
@@ -301,11 +305,6 @@ int emulate_8080cpu(state_8080cpu *state) {
             {
                 uint16_t offset = (state->h << 8) | state->l;
                 state->memory[offset] = opcode[1];
-                if (opcode[1]==0 && state->pc -1 == 0x09d9){
-                    qdebug_log("Writing a 0 to memory %x", offset);
-                    qdebug_log("New memory value: %x", state->memory[offset]);
-                }
-
                 state->pc++;
             }
             break;
