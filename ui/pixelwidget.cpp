@@ -23,7 +23,7 @@ void PixelWidget::updatePixelData(const VideoEmulator& emulator) {
         return;
     }
 
-    qDebug() << "Updating pixel data...";
+    // qDebug() << "Updating pixel data...";
 
 
 
@@ -32,12 +32,15 @@ void PixelWidget::updatePixelData(const VideoEmulator& emulator) {
             int pixelState = emulator.getPixel(x, y);
 
             // Debug the pixel extraction
+            /*
             if (x < 10 && y < 10) { // Only debug the top-left corner for simplicity
                 qDebug() << "Pixel (" << x << "," << y << ") state:" << pixelState;
             }
+            */
 
             QRgb color = (pixelState == 1) ? qRgb(255, 255, 255) : qRgb(0, 0, 0);
             image.setPixel(x, y, color);
+
         }
     }
 

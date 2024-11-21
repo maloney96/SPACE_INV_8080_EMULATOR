@@ -996,7 +996,7 @@ void generateInterrupt(state_8080cpu* state, int interrupt_num)
  //   qdebug_log("Generating interrupt %d\n", interrupt_num);
 
     //perform "PUSH PC"
-    qdebug_log("Pushing Program Counter: %04x\n", state->pc);
+    //qdebug_log("Pushing Program Counter: %04x\n", state->pc);
     uint16_t ret = state->pc;
     write_memory(state, state->sp-1, (ret >> 8) & 0xff);
     write_memory(state, state->sp-2, (ret & 0xff));
