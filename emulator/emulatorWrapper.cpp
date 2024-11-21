@@ -152,7 +152,7 @@ void EmulatorWrapper::runCycle() {
         EmulatorWrapper::handleIN(opcode);
         }
         cycles_used = emulate_8080cpu(&state);
-        previous_cycle_time = std::chrono::high_resolution_clock::now();
+        previous_cycle_time = current_timepoint;
     }
 
     // Handle interrupts
