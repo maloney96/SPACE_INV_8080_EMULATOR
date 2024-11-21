@@ -37,7 +37,7 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
 
     // Initialize CPU state
     state.memory = ram->mem;
-    state.pc = 0;
+    state.pc = 0x100;
     state.sp = 0;
 
     // Initialize IO ports
@@ -153,16 +153,6 @@ void EmulatorWrapper::runCycle() {
         previous_cycle_time = current_timepoint;
     }
 
-    // Handle interrupts
-    if ((current_timepoint - previous_interrupt_time) > std::chrono::nanoseconds(INTERRUPT_INTERVAL)) {
-        if (state.int_enable) {
-            int interrupt_num = interrupt_toggle + 1; // 1 for mid-screen, 2 for bottom
-            generateInterrupt(&state, interrupt_num);
-            state.int_enable = false;
-            previous_interrupt_time = current_timepoint;
-            interrupt_toggle ^= 1; // Toggle interrupt state
-        }
-    }
 }
 
 // Cleanup resources

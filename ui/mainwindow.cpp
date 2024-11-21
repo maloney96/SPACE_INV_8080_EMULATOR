@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // assembles .ROM file from segragated files.
-    RomAssembler r = RomAssembler();
+    // RomAssembler r = RomAssembler();
 
     // Connect the buttons to their respective slots
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
