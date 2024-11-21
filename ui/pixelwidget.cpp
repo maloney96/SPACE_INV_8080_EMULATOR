@@ -23,7 +23,7 @@ void PixelWidget::updatePixelData(const VideoEmulator& emulator) {
         return;
     }
 
-    qDebug() << "Updating pixel data...";
+    //qDebug() << "Updating pixel data...";
 
 
 
