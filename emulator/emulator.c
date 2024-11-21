@@ -524,7 +524,6 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0x74: handle_MOVwithMemory(&state->h, state, 1); break; // MOV M, H
         case 0x75: handle_MOVwithMemory(&state->l, state, 1); break; // MOV M, L
         //0x76 is HLT
-        case 0x76: break;
         case 0x77: handle_MOVwithMemory(&state->a, state, 1); break; // MOV M, A
 
         // DESTINATION A
@@ -613,7 +612,7 @@ int emulate_8080cpu(state_8080cpu *state) {
             flags_zerosignparity(state, state->a);
             state->cc.cy = 0;
             state->pc += 1;
-        }
+        }; break;
 
         // CMP cases
         case 0xb8: {uint16_t res = (uint16_t) state->a - (uint16_t) state->b; flags_arithA(state, res);} break; //CMP B
