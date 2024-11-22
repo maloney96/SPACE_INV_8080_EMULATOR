@@ -636,18 +636,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xc1: handle_POP(&state->b, &state->c, state); break; // POP B
         case 0xd1: handle_POP(&state->d, &state->e, state); break; // POP D
         case 0xe1: handle_POP(&state->h, &state->l, state); break; // POP H
-        case 0xf1:                                                 // POP PSW
-            {
-				state->a = state->memory[state->sp+1];
-				uint8_t psw = state->memory[state->sp];
-				state->cc.z  = (0x01 == (psw & 0x01));
-				state->cc.s  = (0x02 == (psw & 0x02));
-				state->cc.p  = (0x04 == (psw & 0x04));
-                state->cc.cy = (0x08 == (psw & 0x08));
-				state->cc.ac = (0x10 == (psw & 0x10));
-				state->sp += 2;
-			}
-			break;
+        case 0xf1: handle_POP(&state->a,(unsigned char*) &state->cc, state); break; // POP PSW
         
         // RZ case
         case 0xc8:
