@@ -54,6 +54,7 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
     //Shift registers for bit shifting hardware
     shift0 = 0; //Low register
     shift1 = 0; //High register
+    shift_amt = 0; //Shift amount
 
     // Initialize timer for interrupts
     previous_interrupt_time = std::chrono::high_resolution_clock::now();
@@ -91,7 +92,7 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
     switch(opcode[1]){
     //Change shift amount
     case 2:
-        state.ioports.write02 = opcode[2] & 0x7;
+        shift_amt = state.a & 0x7;
         break;
     case 3:
         state.ioports.write03 = opcode[2];
@@ -121,7 +122,7 @@ void EmulatorWrapper::handleIN(unsigned char* opcode){
     //Method adapted from Emulator101 code
     case 3:
         uint16_t v = (shift1<<8) | shift0;
-        state.ioports.read03 = ((v >> (8-state.ioports.write02)) & 0xff);
+        state.ioports.read03 = ((v >> (8 - shift_amt)) & 0xff);
         state.a = state.ioports.read03;
         break;
     }
