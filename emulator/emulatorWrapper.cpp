@@ -105,7 +105,7 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
         state.ioports.write05 = opcode[2];
         break;
     case 6:
-        state.ioports.write05 = opcode[2];
+        state.ioports.write06 = opcode[2];
         break;
     }
 }
