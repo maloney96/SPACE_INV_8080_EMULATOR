@@ -65,6 +65,7 @@ private:
     // Used to emulate specialized bitshifting hardware
     uint8_t shift0;
     uint8_t shift1;
+    uint8_t shift_amt;
 
     // We handle IN and OUT opcodes in the wrapper to avoid introducing extra elements like bitshift hardware into emulator core
     void handleOUT(unsigned char* opcode);
