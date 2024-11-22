@@ -31,7 +31,7 @@ OutputManager::~OutputManager() {
 
 void OutputManager::updateFrame() {
     // No operation needed in updateFrame as VideoEmulator is already synchronized
-    qDebug() << "Frame updated from emulator memory";
+    // qDebug() << "Frame updated from emulator memory";
 }
 
 const VideoEmulator& OutputManager::getVideoEmulator() const {

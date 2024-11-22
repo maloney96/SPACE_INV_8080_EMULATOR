@@ -45,9 +45,9 @@ void unimplemented_instruction(state_8080cpu *state) {
     state->pc--; // Undo PC increment
 
     // Display error message along with the disassembled instruction
-    fprintf(stderr, "Error: No instruction implemented at address %04x: ", state->pc);
+    qdebug_log("Error: No instruction implemented at address %04x: ", state->pc);
     disassemble_opcode(state->memory, state->pc);  // Show the problematic instruction
-    fprintf(stderr, "\n");
+    qdebug_log("\n");
 
     exit(EXIT_FAILURE);
 };
@@ -224,7 +224,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 	unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
 
-	disassemble_opcode(state->memory, state->pc);
+    //disassemble_opcode(state->memory, state->pc);
 	
 	state->pc+=1;	
 
@@ -636,18 +636,7 @@ int emulate_8080cpu(state_8080cpu *state) {
         case 0xc1: handle_POP(&state->b, &state->c, state); break; // POP B
         case 0xd1: handle_POP(&state->d, &state->e, state); break; // POP D
         case 0xe1: handle_POP(&state->h, &state->l, state); break; // POP H
-        case 0xf1:                                                 // POP PSW
-            {
-				state->a = state->memory[state->sp+1];
-				uint8_t psw = state->memory[state->sp];
-				state->cc.z  = (0x01 == (psw & 0x01));
-				state->cc.s  = (0x02 == (psw & 0x02));
-				state->cc.p  = (0x04 == (psw & 0x04));
-				state->cc.cy = (0x05 == (psw & 0x08));
-				state->cc.ac = (0x10 == (psw & 0x10));
-				state->sp += 2;
-			}
-			break;
+        case 0xf1: handle_POP(&state->a,(unsigned char*) &state->cc, state); break; // POP PSW
         
         // RZ case
         case 0xc8:
@@ -978,23 +967,23 @@ int emulate_8080cpu(state_8080cpu *state) {
         
     }
     // Print Tab
-    qdebug_log("\t");
+    //qdebug_log("\t");
     
     // Print Register Values and Flags
-    qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
-       state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
-       state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.', 
-       state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
+    //qdebug_log("A $%02x B $%02x c $%02x D $%02x E $%02x H $%02x L $%02x SP %04x Flags: %c%c%c%c%c SP:%04x PC:%04x\n",
+    //   state->a, state->b, state->c, state->d, state->e, state->h, state->l, state->sp,
+    //   state->cc.z ? 'Z' : '.', state->cc.s ? 'S' : '.', state->cc.p ? 'P' : '.',
+    //   state->cc.cy ? 'C' : '.', state->cc.ac ? 'A' : '.', state->sp, state->pc);
 
     return cycles;
 };
 
 void generateInterrupt(state_8080cpu* state, int interrupt_num)
 {
-    qdebug_log("Generating interrupt %d\n", interrupt_num);
+    //qdebug_log("Generating interrupt %d\n", interrupt_num);
 
     //perform "PUSH PC"
-    qdebug_log("Pushing Program Counter: %04x\n", state->pc);
+    //qdebug_log("Pushing Program Counter: %04x\n", state->pc);
     uint16_t ret = state->pc;
     write_memory(state, state->sp-1, (ret >> 8) & 0xff);
     write_memory(state, state->sp-2, (ret & 0xff));
