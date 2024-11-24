@@ -12,5 +12,14 @@
     </qresource>
     <qresource prefix="/sounds">
         <file>sounds/MenuTrack.mp3</file>
+        <file>sounds/explosion.mp3</file>
+        <file>sounds/fastinvader1.mp3</file>
+        <file>sounds/fastinvader2.mp3</file>
+        <file>sounds/fastinvader3.mp3</file>
+        <file>sounds/fastinvader4.mp3</file>
+        <file>sounds/invaderkilled.mp3</file>
+        <file>sounds/shoot.mp3</file>
+        <file>sounds/ufo_highpitch.mp3</file>
+        <file>sounds/ufo_lowpitch.mp3</file>
     </qresource>
 </RCC>
