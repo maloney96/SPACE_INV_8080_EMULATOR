@@ -18,6 +18,8 @@
  *
  *  Modified by Ian McCubbin, 11/9/2024
  *  - BUGFIX- implemented resize method override for GLWidget
+ *  Modified by Noah Freeman, 11/20/2024
+ *  - Added Pause, Step, Resume functionalities
 */
 
 #include "mainwindow.h"
@@ -37,26 +39,33 @@
 #include <QKeySequence>
 #include <QTimer>
 #include <QResizeEvent>
+#include <QPushButton>
+#include <QShortcut>
 
 /**
  * @brief Constructs the MainWindow object.
- * 
+ *
  * Initializes the user interface, sets up button connections, and initializes member variables.
- * 
+ *
  * @param parent Pointer to the parent widget, default is nullptr.
  */
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , keycodes(7)
-    , inputManager(nullptr)
-    , outputManager(nullptr)
-    , frameTimer(new QTimer(this))
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    keycodes(7),
+    inputManager(nullptr),
+    outputManager(nullptr),
+    frameTimer(new QTimer(this)),
+    audioMixer(new AudioMixer),
+    audioMixerThread(new QThread(this))
 {
     // load UI file
     ui->setupUi(this);
-    setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+    setMinimumSize(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT);
 
+    audioMixer->moveToThread(audioMixerThread);
+    audioMixerThread->start();
+    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
 
     // assembles .ROM file from segragated files.
     RomAssembler r = RomAssembler();
@@ -65,12 +74,33 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
     connect(ui->buttonSettings, &QPushButton::clicked, this, &MainWindow::onButtonSettingsClicked);
     connect(ui->buttonInstructions, &QPushButton::clicked, this, &MainWindow::onButtonInstructionsClicked);
+
+    // Manage shortcuts for debug
+    QShortcut* pauseShortcut = new QShortcut(QKeySequence("P"), this);
+    QShortcut* resumeShortcut = new QShortcut(QKeySequence("R"), this);
+    QShortcut* stepShortcut = new QShortcut(QKeySequence("S"), this);
+
+    // Connect the shortcuts to emulator actions
+    connect(pauseShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().pauseEmulation();
+        qDebug() << "Pause shortcut activated!";
+    });
+
+    connect(resumeShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().resumeEmulation();
+        qDebug() << "Resume shortcut activated!";
+    });
+
+    connect(stepShortcut, &QShortcut::activated, this, []() {
+        EmulatorWrapper::getInstance().stepEmulation();
+        qDebug() << "Step shortcut activated!";
+    });
 }
 
 
 /**
  * @brief Destructor for MainWindow.
- * 
+ *
  * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
  */
 MainWindow::~MainWindow()
@@ -113,13 +143,14 @@ MainWindow::~MainWindow()
         qDebug() << "OutputManager destroyed.";
     }
 
-    // Clean up OpenGL widget
-    if (glWidget) {
-        glWidget->hide();
-        delete glWidget;
-        glWidget = nullptr;
-        qDebug() << "GLWidget destroyed.";
+    // Clean up PixelWidget
+    if (!pixelWidget) {
+        pixelWidget = new PixelWidget(ui->frame);
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
     }
+
+    stopAudioMixer();
 
     // Clean up UI
     delete ui;
@@ -130,7 +161,7 @@ MainWindow::~MainWindow()
 
 /**
  * @brief Loads key mappings from a JSON file or sets default mappings.
- * 
+ *
  * Checks for the existence of a `.keymap.json` file in the current directory. If the file exists,
  * it loads the key mappings from it. If not, it sets the default key mappings and optionally saves
  * them to a new file.
@@ -175,7 +206,7 @@ void MainWindow::loadKeyMappings()
 
 /**
  * @brief Saves the current key mappings to a JSON file.
- * 
+ *
  * Writes the current key mappings to a `.keymap.json` file in the current directory.
  */
 void MainWindow::saveKeyMappings()
@@ -241,11 +272,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 frameTimer->stop();
             }
 
-            // terminate openGL widget
-            if (glWidget) {
-                glWidget->hide();
-                delete glWidget;
-                glWidget = nullptr;
+            // terminate pixelWidget
+            if (pixelWidget) {
+                pixelWidget->hide();
+                delete pixelWidget;
+                pixelWidget = nullptr;
             }
 
             // restore navigation buttons and background
@@ -290,6 +321,10 @@ void MainWindow::onButtonPlayClicked()
 {
     qDebug() << "Play Game button clicked! Starting the game...";
 
+    if (audioMixer) {
+        QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
+    }
+
     // Hide navigation buttons and setup the game environment
     ui->buttonPlay->hide();
     ui->buttonPlay->setEnabled(false);
@@ -303,6 +338,8 @@ void MainWindow::onButtonPlayClicked()
 
     loadKeyMappings();
 
+
+
     if (!isGameRunning) {
         inputManager = &InputManager::getInstance();
         inputManager->moveToThread(&inputManagerThread);
@@ -310,10 +347,10 @@ void MainWindow::onButtonPlayClicked()
         isGameRunning = true;
     }
 
-    if (!glWidget) {
-        glWidget = new GLWidget(ui->frame);
-        glWidget->setGeometry(ui->frame->rect());
-        glWidget->show();
+    if (!pixelWidget) {
+        pixelWidget = new PixelWidget(ui->frame);
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
     }
 
     if (!outputManager) {
@@ -324,7 +361,7 @@ void MainWindow::onButtonPlayClicked()
         // Connect frame updates to rendering
         connect(frameTimer, &QTimer::timeout, this, [&]() {
             QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
-            glWidget->renderFrame(outputManager->getVideoEmulator());
+            pixelWidget->renderFrame();
         });
         frameTimer->start(16);  // Roughly 60 FPS
     }
@@ -361,6 +398,36 @@ void MainWindow::onButtonInstructionsClicked()
 }
 
 /**
+ * @brief Slot triggered when "pause" button is clicked.
+ *
+ * This function opens the pause button for debugging.
+ */
+void MainWindow::onButtonPauseClicked() {
+    EmulatorWrapper::getInstance().pauseEmulation();
+    qDebug() << "Pause button clicked!";
+}
+
+/**
+ * @brief Slot triggered when "resume" button is clicked.
+ *
+ * This function opens the resume button for debugging.
+ */
+void MainWindow::onButtonResumeClicked() {
+    EmulatorWrapper::getInstance().resumeEmulation();
+    qDebug() << "Resume button clicked!";
+}
+
+/**
+ * @brief Slot triggered when "step" button is clicked.
+ *
+ * This function opens the step button for debugging.
+ */
+void MainWindow::onButtonStepClicked() {
+    EmulatorWrapper::getInstance().stepEmulation();
+    qDebug() << "Step button clicked!";
+}
+
+/**
  * @brief Slot triggered when the "Instructions" button is clicked.
  *
  * This function opens the instructions dialog, providing the user with game instructions.
@@ -369,8 +436,21 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);  // Call the base class implementation
 
-    // If GLWidget exists, resize it to match the size of the frame
-    if (glWidget) {
-        glWidget->setGeometry(ui->frame->rect());
+    // If PixelWidget  exists, resize it to match the size of the frame
+    if (pixelWidget) {
+        pixelWidget->setGeometry(ui->frame->rect());
     }
 }
+
+void MainWindow::stopAudioMixer()
+{
+    if (audioMixerThread->isRunning()) {
+        QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
+        audioMixerThread->quit();
+        audioMixerThread->wait();
+        delete audioMixer;
+        delete audioMixerThread;
+        qDebug() << "AudioMixer thread stopped and cleaned up.";
+    }
+}
+

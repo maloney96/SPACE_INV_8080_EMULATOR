@@ -1,26 +1,55 @@
-#ifndef VIDEO_MEMORY_EMULATOR_H
-#define VIDEO_MEMORY_EMULATOR_H
+#ifndef VIDEOEMULATOR_H
+#define VIDEOEMULATOR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cstdint>
+#include <QDebug>
 
-#define SCREEN_WIDTH 224
-#define SCREEN_HEIGHT 256
-#define FRAME_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 8) // Total bytes for 224x256 resolution
+/**
+ * @brief The VideoEmulator class provides a read-only interface to the video memory
+ * for rendering and pixel management in the Space Invaders emulator.
+ */
+class VideoEmulator {
+public:
+    static constexpr int SCREEN_WIDTH = 224;
+    static constexpr int SCREEN_HEIGHT = 256;
+    static constexpr int FRAME_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT / 8;
 
-typedef struct {
-    unsigned char memory[FRAME_SIZE];
-} VideoEmulator;
+    /**
+     * @brief Gets the singleton instance of the VideoEmulator.
+     *
+     * @param emulatorMemory Pointer to the emulator's video memory. This must
+     *        be passed during the first call to initialize the singleton.
+     * @return A pointer to the singleton VideoEmulator instance.
+     */
+    static VideoEmulator* getInstance(const uint8_t* emulatorMemory = nullptr);
 
-void VideoEmulator_init(VideoEmulator *emulator);
-void VideoEmulator_generateFrame(VideoEmulator *emulator);
-void VideoEmulator_setPixel(VideoEmulator *emulator, int x, int y, int state);
-int VideoEmulator_getPixel(const VideoEmulator *emulator, int x, int y);
-unsigned char* VideoEmulator_getFrame(VideoEmulator *emulator);
+    // Delete copy constructor and assignment operator
+    VideoEmulator(const VideoEmulator&) = delete;
+    VideoEmulator& operator=(const VideoEmulator&) = delete;
 
-#ifdef __cplusplus
-}
-#endif
+    /**
+     * @brief Accesses the raw video frame memory.
+     * @return A read-only pointer to the video memory.
+     */
+    const uint8_t* getFrame() const;
 
-#endif // VIDEO_MEMORY_EMULATOR_H
+    /**
+     * @brief Gets the state of a pixel at a specific (x, y) coordinate.
+     * @param x The x-coordinate of the pixel.
+     * @param y The y-coordinate of the pixel.
+     * @return 1 if the pixel is "on", 0 if "off".
+     */
+    int getPixel(int x, int y) const;
+
+private:
+    // Private constructor for the singleton
+    explicit VideoEmulator(const uint8_t* emulatorMemory);
+
+    // Destructor
+    ~VideoEmulator() = default;
+
+    static VideoEmulator* instance; ///< Singleton instance of VideoEmulator
+    const uint8_t* memory; ///< Pointer to the read-only video memory
+};
+
+#endif // VIDEOEMULATOR_H

@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QImage>
-#include "../outputmanager/videoemulator.h"
 
 /**
  * @brief PixelWidget is responsible for rendering the video frames.
@@ -20,10 +19,8 @@ public:
 
     /**
      * @brief Updates the widget with a new frame from the emulator.
-     *
-     * @param emulator A reference to the VideoEmulator instance.
      */
-    void renderFrame(const VideoEmulator& emulator);
+    void renderFrame();
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -33,10 +30,8 @@ private:
 
     /**
      * @brief Updates the pixel data in the QImage based on emulator memory.
-     *
-     * @param emulator A reference to the VideoEmulator instance.
      */
-    void updatePixelData(const VideoEmulator& emulator);
+    void updatePixelData();
 };
 
 #endif // PIXELWIDGET_H
