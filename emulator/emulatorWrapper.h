@@ -1,84 +1,58 @@
+//
+// Created by Colin Cummins on 10/20/24.
+//
+
 #ifndef EMULATORWRAPPER_H
 #define EMULATORWRAPPER_H
 
-#include <QObject>
+#include <QObject>  // Include QObject for threading
 #include <QDebug>
-#include <chrono>
+#include "ioports_t.h"
 #include "../memory/memory.h"
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
 #include "../memory/mem_utils.h"
-#include "../outputmanager/videoemulator.h"
-#include "ioports_t.h"
-#include <condition_variable>
-#include <mutex>
 
-class EmulatorWrapper : public QObject {
-    Q_OBJECT
+class EmulatorWrapper : public QObject  // Inherit from QObject
+{
+    Q_OBJECT  // Enable Qt's meta-object system for QObject features
 
 public:
     // Static method to get the singleton instance
     static EmulatorWrapper& getInstance();
 
+
     // Delete copy constructor and assignment operator
     EmulatorWrapper(const EmulatorWrapper&) = delete;
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
+
     void cleanup();
+
     ioports_t* getIOptr();
-
-    // Provide access to video memory (read-only)
-    const uint8_t* getVideoMemory() const;
-
-    // Provide access to VideoEmulator for rendering or analysis
-    const VideoEmulator* getVideoEmulator() const;
 
 public slots:
     void startEmulation();
     void runCycle();
-    void pauseEmulation();       // Pause emulation
-    void resumeEmulation();      // Resume emulation
-    void stepEmulation();        // Step one cycle
 
 private:
     // Private constructor (singleton pattern)
     EmulatorWrapper();
+    // Private destructor
     ~EmulatorWrapper();
 
-    // Static instance pointer
+    // Static pointer to hold the singleton instance
     static EmulatorWrapper* instance;
 
-    // Emulator state and helper functions
+    // Control on/off emulator logic loop
     bool running;
+
     void dummyIOportReader();
 
-    // CPU Memory and State
-    mem_block_t* ram;
+    mem_block_t *ram;
     state_8080cpu state;
-
-    // Interrupt and timing handling
-    std::chrono::high_resolution_clock::time_point previous_interrupt_time;
-    std::chrono::high_resolution_clock::time_point previous_cycle_time;
-    uint8_t cycles_used;
+    std::chrono::high_resolution_clock::time_point previous_timepoint;
     uint8_t interrupt_toggle;
-
-    // Used to emulate specialized bitshifting hardware
-    uint8_t shift0;
-    uint8_t shift1;
-    uint8_t shift_amt;
-
-    // We handle IN and OUT opcodes in the wrapper to avoid introducing extra elements like bitshift hardware into emulator core
-    void handleOUT(unsigned char* opcode);
-    void handleIN(unsigned char* opcode);
-
-    // VideoEmulator instance (manages read-only video memory)
-    VideoEmulator* videoEmulator;
-
-    // For Emulator debugging controls
-    std::condition_variable pauseCondition;
-    std::mutex pauseMutex;
-    std::atomic<bool> paused;
-    std::atomic<bool> stepping;
 };
 
 #endif // EMULATORWRAPPER_H

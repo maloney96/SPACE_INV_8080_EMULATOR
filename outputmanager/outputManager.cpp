@@ -1,5 +1,5 @@
 #include "../outputmanager/outputManager.h"
-#include "../emulator/emulatorWrapper.h"
+#include <iostream>
 #include <QDebug>
 
 // Initialize the static instance pointer to nullptr
@@ -21,8 +21,8 @@ void OutputManager::destroyInstance() {
 }
 
 OutputManager::OutputManager(QObject *parent)
-    : QObject(parent), emulator(EmulatorWrapper::getInstance().getVideoMemory()) {
-    qDebug() << "OutputManager created";
+    : QObject(parent) {
+    VideoEmulator_init(&emulator);
 }
 
 OutputManager::~OutputManager() {
@@ -30,10 +30,9 @@ OutputManager::~OutputManager() {
 }
 
 void OutputManager::updateFrame() {
-    // No operation needed in updateFrame as VideoEmulator is already synchronized
-    // qDebug() << "Frame updated from emulator memory";
+    VideoEmulator_generateFrame(&emulator);
 }
 
-const VideoEmulator& OutputManager::getVideoEmulator() const {
-    return emulator;
+VideoEmulator* OutputManager::getVideoEmulator() {
+    return &emulator;
 }

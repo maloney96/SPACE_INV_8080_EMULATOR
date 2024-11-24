@@ -1,22 +1,26 @@
-#ifndef VIDEOEMULATOR_H
-#define VIDEOEMULATOR_H
+#ifndef VIDEO_MEMORY_EMULATOR_H
+#define VIDEO_MEMORY_EMULATOR_H
 
-#include <cstdint>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class VideoEmulator {
-public:
-    static constexpr int SCREEN_WIDTH = 224;
-    static constexpr int SCREEN_HEIGHT = 256;
-    static constexpr int FRAME_SIZE = SCREEN_WIDTH * SCREEN_HEIGHT / 8;
+#define SCREEN_WIDTH 224
+#define SCREEN_HEIGHT 256
+#define FRAME_SIZE (SCREEN_WIDTH * SCREEN_HEIGHT / 8) // Total bytes for 224x256 resolution
 
-    explicit VideoEmulator(const uint8_t* emulatorMemory);
-    ~VideoEmulator() = default;
+typedef struct {
+    unsigned char memory[FRAME_SIZE];
+} VideoEmulator;
 
-    const uint8_t* getFrame() const;
-    int getPixel(int x, int y) const;
+void VideoEmulator_init(VideoEmulator *emulator);
+void VideoEmulator_generateFrame(VideoEmulator *emulator);
+void VideoEmulator_setPixel(VideoEmulator *emulator, int x, int y, int state);
+int VideoEmulator_getPixel(const VideoEmulator *emulator, int x, int y);
+unsigned char* VideoEmulator_getFrame(VideoEmulator *emulator);
 
-private:
-    const uint8_t* memory; // Read-only pointer to the video memory managed by EmulatorWrapper
-};
+#ifdef __cplusplus
+}
+#endif
 
-#endif // VIDEOEMULATOR_H
+#endif // VIDEO_MEMORY_EMULATOR_H

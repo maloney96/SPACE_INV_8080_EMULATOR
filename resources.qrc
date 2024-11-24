@@ -10,4 +10,7 @@
         <file>ROM/invaders.g</file>
         <file>ROM/invaders.h</file>
     </qresource>
+    <qresource prefix="/sounds">
+        <file>sounds/MenuTrack.mp3</file>
+    </qresource>
 </RCC>

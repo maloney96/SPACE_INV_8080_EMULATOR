@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Created by Ian McCubbin, 10/19/2024
+  Main window for Space Invaders Emulator, contains options to play,
+  set controls, and show instructions
+
+  Modified by Ian McCubbin, 10/23/2024
+  - Integrated instructions page
+  - Additional optimizations to main window for input handling
+
+  Modified by Ian McCubbin, 10/23/2024
+  - Integrated settings page
+
+  Modified by Ian McCubbin, 10/28/2024
+  - Added ability to read keymap.json to set game key controls.
+-->
+
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
@@ -14,7 +30,7 @@
    <string>Space Invaders</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-image: url(:/Images/images/spaceSky.jpg);</string>
+   <string notr="true">background-image: url(:/Images/images/spcaeSky.jpg);</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayoutMain">

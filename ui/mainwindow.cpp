@@ -18,8 +18,6 @@
  *
  *  Modified by Ian McCubbin, 11/9/2024
  *  - BUGFIX- implemented resize method override for GLWidget
- *  Modified by Noah Freeman, 11/20/2024
- *  - Added Pause, Step, Resume functionalities
 */
 
 #include "mainwindow.h"
@@ -39,14 +37,12 @@
 #include <QKeySequence>
 #include <QTimer>
 #include <QResizeEvent>
-#include <QPushButton>
-#include <QShortcut>
 
 /**
  * @brief Constructs the MainWindow object.
- *
+ * 
  * Initializes the user interface, sets up button connections, and initializes member variables.
- *
+ * 
  * @param parent Pointer to the parent widget, default is nullptr.
  */
 MainWindow::MainWindow(QWidget *parent)
@@ -59,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // load UI file
     ui->setupUi(this);
-    setMinimumSize(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT);
+    setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
     // assembles .ROM file from segragated files.
@@ -69,33 +65,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
     connect(ui->buttonSettings, &QPushButton::clicked, this, &MainWindow::onButtonSettingsClicked);
     connect(ui->buttonInstructions, &QPushButton::clicked, this, &MainWindow::onButtonInstructionsClicked);
-
-    // Manage shortcuts for debug
-    QShortcut* pauseShortcut = new QShortcut(QKeySequence("P"), this);
-    QShortcut* resumeShortcut = new QShortcut(QKeySequence("R"), this);
-    QShortcut* stepShortcut = new QShortcut(QKeySequence("S"), this);
-
-    // Connect the shortcuts to emulator actions
-    connect(pauseShortcut, &QShortcut::activated, this, []() {
-        EmulatorWrapper::getInstance().pauseEmulation();
-        qDebug() << "Pause shortcut activated!";
-    });
-
-    connect(resumeShortcut, &QShortcut::activated, this, []() {
-        EmulatorWrapper::getInstance().resumeEmulation();
-        qDebug() << "Resume shortcut activated!";
-    });
-
-    connect(stepShortcut, &QShortcut::activated, this, []() {
-        EmulatorWrapper::getInstance().stepEmulation();
-        qDebug() << "Step shortcut activated!";
-    });
 }
 
 
 /**
  * @brief Destructor for MainWindow.
- *
+ * 
  * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
  */
 MainWindow::~MainWindow()
@@ -138,11 +113,12 @@ MainWindow::~MainWindow()
         qDebug() << "OutputManager destroyed.";
     }
 
-    // Clean up PixelWidget
-    if (!pixelWidget) {
-        pixelWidget = new PixelWidget(ui->frame);
-        pixelWidget->setGeometry(ui->frame->rect());
-        pixelWidget->show();
+    // Clean up OpenGL widget
+    if (glWidget) {
+        glWidget->hide();
+        delete glWidget;
+        glWidget = nullptr;
+        qDebug() << "GLWidget destroyed.";
     }
 
     // Clean up UI
@@ -154,7 +130,7 @@ MainWindow::~MainWindow()
 
 /**
  * @brief Loads key mappings from a JSON file or sets default mappings.
- *
+ * 
  * Checks for the existence of a `.keymap.json` file in the current directory. If the file exists,
  * it loads the key mappings from it. If not, it sets the default key mappings and optionally saves
  * them to a new file.
@@ -199,7 +175,7 @@ void MainWindow::loadKeyMappings()
 
 /**
  * @brief Saves the current key mappings to a JSON file.
- *
+ * 
  * Writes the current key mappings to a `.keymap.json` file in the current directory.
  */
 void MainWindow::saveKeyMappings()
@@ -265,11 +241,11 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 frameTimer->stop();
             }
 
-            // terminate pixelWidget
-            if (pixelWidget) {
-                pixelWidget->hide();
-                delete pixelWidget;
-                pixelWidget = nullptr;
+            // terminate openGL widget
+            if (glWidget) {
+                glWidget->hide();
+                delete glWidget;
+                glWidget = nullptr;
             }
 
             // restore navigation buttons and background
@@ -334,10 +310,10 @@ void MainWindow::onButtonPlayClicked()
         isGameRunning = true;
     }
 
-    if (!pixelWidget) {
-        pixelWidget = new PixelWidget(ui->frame);
-        pixelWidget->setGeometry(ui->frame->rect());
-        pixelWidget->show();
+    if (!glWidget) {
+        glWidget = new GLWidget(ui->frame);
+        glWidget->setGeometry(ui->frame->rect());
+        glWidget->show();
     }
 
     if (!outputManager) {
@@ -348,7 +324,7 @@ void MainWindow::onButtonPlayClicked()
         // Connect frame updates to rendering
         connect(frameTimer, &QTimer::timeout, this, [&]() {
             QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
-            pixelWidget->renderFrame(outputManager->getVideoEmulator());
+            glWidget->renderFrame(outputManager->getVideoEmulator());
         });
         frameTimer->start(16);  // Roughly 60 FPS
     }
@@ -385,36 +361,6 @@ void MainWindow::onButtonInstructionsClicked()
 }
 
 /**
- * @brief Slot triggered when "pause" button is clicked.
- *
- * This function opens the pause button for debugging.
- */
-void MainWindow::onButtonPauseClicked() {
-    EmulatorWrapper::getInstance().pauseEmulation();
-    qDebug() << "Pause button clicked!";
-}
-
-/**
- * @brief Slot triggered when "resume" button is clicked.
- *
- * This function opens the resume button for debugging.
- */
-void MainWindow::onButtonResumeClicked() {
-    EmulatorWrapper::getInstance().resumeEmulation();
-    qDebug() << "Resume button clicked!";
-}
-
-/**
- * @brief Slot triggered when "step" button is clicked.
- *
- * This function opens the step button for debugging.
- */
-void MainWindow::onButtonStepClicked() {
-    EmulatorWrapper::getInstance().stepEmulation();
-    qDebug() << "Step button clicked!";
-}
-
-/**
  * @brief Slot triggered when the "Instructions" button is clicked.
  *
  * This function opens the instructions dialog, providing the user with game instructions.
@@ -423,8 +369,8 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);  // Call the base class implementation
 
-    // If PixelWidget  exists, resize it to match the size of the frame
-    if (pixelWidget) {
-        pixelWidget->setGeometry(ui->frame->rect());
+    // If GLWidget exists, resize it to match the size of the frame
+    if (glWidget) {
+        glWidget->setGeometry(ui->frame->rect());
     }
 }
