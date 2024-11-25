@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QImage>
+#include "../outputmanager/outputManager.h"
 
 /**
  * @brief PixelWidget is responsible for rendering the video frames.
@@ -22,16 +23,19 @@ public:
      */
     void renderFrame();
 
+public slots:
+    /**
+     * @brief Updates the pixel data in the QImage based on emulator memory.
+     */
+    void updatePixelData();
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
     QImage image; ///< The QImage used for rendering.
 
-    /**
-     * @brief Updates the pixel data in the QImage based on emulator memory.
-     */
-    void updatePixelData();
+
 };
 
 #endif // PIXELWIDGET_H

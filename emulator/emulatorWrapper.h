@@ -11,7 +11,6 @@
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
 #include "../memory/mem_utils.h"
-#include "../outputmanager/videoemulator.h"
 #include "ioports_t.h"
 
 class EmulatorWrapper : public QObject {
@@ -30,9 +29,6 @@ public:
 
     // Provide access to video memory (read-only)
     const uint8_t* getVideoMemory() const;
-
-    // Provide access to VideoEmulator for rendering or analysis
-    const VideoEmulator* getVideoEmulator() const;
 
 public slots:
     void startEmulation();

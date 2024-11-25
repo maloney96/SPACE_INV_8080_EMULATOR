@@ -1,56 +1,106 @@
-#include "../outputmanager/outputManager.h"
-#include "../emulator/emulatorWrapper.h"
+#include "outputManager.h"
 #include <QDebug>
 
-// Initialize the static instance pointer to nullptr
 OutputManager* OutputManager::instance = nullptr;
 
-// Get the singleton instance of the OutputManager
 OutputManager* OutputManager::getInstance() {
-    if (instance == nullptr) {
+    if (!instance) {
         instance = new OutputManager();
     }
     return instance;
 }
 
-// Destroy the singleton instance of the OutputManager
 void OutputManager::destroyInstance() {
-    if (instance != nullptr) {
+    if (instance) {
         delete instance;
         instance = nullptr;
         qDebug() << "OutputManager instance destroyed";
     }
 }
 
-// Constructor (private for singleton pattern)
-OutputManager::OutputManager(QObject *parent)
-    : QObject(parent) {
-    qDebug() << "OutputManager created";
+OutputManager::OutputManager(QObject* parent)
+    : QObject(parent), videoMemory(nullptr), audioMixer(nullptr) {
+    // Create a dedicated thread for the timer
+    timerThread = new QThread(this);
+
+    // Create the timer and move it to the thread
+    frameTimer = new QTimer();
+    frameTimer->moveToThread(timerThread);
+
+    // Connect the timer's timeout signal to emit frameReady
+    connect(frameTimer, &QTimer::timeout, this, &OutputManager::frameReady);
+
+    // Start the timer when the thread starts
+    connect(timerThread, &QThread::started, frameTimer, [=]() {
+        frameTimer->start(16); // Roughly 60 FPS (16ms interval)
+    });
+
+    // Stop the timer and clean up when the thread finishes
+    connect(timerThread, &QThread::finished, frameTimer, &QTimer::stop);
 }
 
-// Destructor
 OutputManager::~OutputManager() {
-    qDebug() << "OutputManager destroyed";
+    stopVideo();
+
+    // Clean up the timer thread
+    timerThread->quit();
+    timerThread->wait();
+    delete frameTimer;
 }
 
-// Update the video frame (placeholder function)
-void OutputManager::updateFrame() {
-    // Example: Log the frame update
-    qDebug() << "Frame updated";
+void OutputManager::initializeVideo() {
+    videoMemory = EmulatorWrapper::getInstance().getVideoMemory();
+    if (!videoMemory) {
+        qCritical() << "Error: Video memory is not initialized!";
+    } else {
+        qDebug() << "Video memory initialized at address:" << static_cast<const void*>(videoMemory);
+    }
 }
 
-// Get a reference to the VideoEmulator singleton
-const VideoEmulator* OutputManager::getVideoEmulator() const {
-    return VideoEmulator::getInstance(EmulatorWrapper::getInstance().getVideoMemory());
+void OutputManager::startVideo() {
+    if (!timerThread->isRunning()) {
+        timerThread->start();
+        qDebug() << "Video thread started.";
+    }
 }
 
-// Set the AudioMixer instance
+const uint8_t* OutputManager::getFrame() const {
+    if (!videoMemory) {
+        qCritical() << "Error: Video memory not initialized!";
+        return nullptr;
+    }
+    return videoMemory;
+}
+
+int OutputManager::getPixel(int x, int y) const {
+    if (!videoMemory) {
+        qCritical() << "Error: Video memory not initialized!";
+        return 0;
+    }
+    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
+        return 0; // Out of bounds; treat as "off"
+    }
+
+    int byteIndex = ((x + 1) * SCREEN_HEIGHT / 8) - y / 8;
+    int bitIndex = 7 - (y % 8);
+    return (videoMemory[byteIndex] >> bitIndex) & 1;
+}
+
+
+void OutputManager::stopVideo() {
+    if (timerThread->isRunning()) {
+        timerThread->quit();
+        timerThread->wait(); // Ensure thread exits cleanly
+        qDebug() << "Video thread stopped.";
+    }
+}
+
+// Audio management methods
 void OutputManager::setAudioMixer(AudioMixer* mixer) {
     audioMixer = mixer;
     qDebug() << "AudioMixer set in OutputManager";
 }
 
-// Play a sound effect using AudioMixer
 void OutputManager::playSoundEffect(const QString& filePath) {
     if (audioMixer) {
         audioMixer->playSoundEffect(filePath);
@@ -59,7 +109,6 @@ void OutputManager::playSoundEffect(const QString& filePath) {
     }
 }
 
-// Start background music using AudioMixer
 void OutputManager::startBackgroundMusic() {
     if (audioMixer) {
         audioMixer->startMenuMusic();
@@ -68,7 +117,6 @@ void OutputManager::startBackgroundMusic() {
     }
 }
 
-// Stop background music using AudioMixer
 void OutputManager::stopBackgroundMusic() {
     if (audioMixer) {
         audioMixer->stopMenuMusic();

@@ -28,7 +28,6 @@
 #include "settings.h"
 #include "../inputmanager/keymap.h"
 #include "../outputmanager/outputManager.h"
-#include "../outputmanager/videoemulator.h"
 #include "../inputmanager/romassembler.h"
 
 #include <QDebug>
@@ -61,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // load UI file
     ui->setupUi(this);
-    setMinimumSize(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT);
+    setMinimumSize(OutputManager::SCREEN_WIDTH, OutputManager::SCREEN_HEIGHT);
 
     audioMixer->moveToThread(audioMixerThread);
     audioMixerThread->start();
@@ -342,24 +341,25 @@ void MainWindow::setMenuBackground()
  * This function initializes the game environment by hiding navigation buttons, setting up the InputManager in a separate thread,
  * loading key mappings, and displaying the OpenGL widget for the game.
  */
-void MainWindow::onButtonPlayClicked()
-{
+void MainWindow::onButtonPlayClicked() {
     qDebug() << "Play Game button clicked! Starting the game...";
 
+    // Set UI mode to "Game"
     setUIMode("Game");
 
+    // Stop menu music if the AudioMixer is set
     if (audioMixer) {
         QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
     }
 
-    // Hide navigation buttons and setup the game environment
-
-
+    // Adjust the UI appearance for the game
     this->setStyleSheet("background-image: none;");
     ui->frame->setStyleSheet("background-color: black;");
 
+    // Load key mappings for the game
     loadKeyMappings();
 
+    // Start the InputManager thread if not already running
     if (!isGameRunning) {
         inputManager = &InputManager::getInstance();
         inputManager->moveToThread(&inputManagerThread);
@@ -367,25 +367,28 @@ void MainWindow::onButtonPlayClicked()
         isGameRunning = true;
     }
 
+    // Initialize and show the PixelWidget for rendering
     if (!pixelWidget) {
         pixelWidget = new PixelWidget(ui->frame);
         pixelWidget->setGeometry(ui->frame->rect());
         pixelWidget->show();
     }
 
+    // Initialize and start the OutputManager
     if (!outputManager) {
         outputManager = OutputManager::getInstance();
+        outputManager->initializeVideo(); // Set up video memory
         outputManager->moveToThread(&outputManagerThread);
         outputManagerThread.start();
 
-        // Connect frame updates to rendering
-        connect(frameTimer, &QTimer::timeout, this, [&]() {
-            QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
-            pixelWidget->renderFrame();
-        });
-        frameTimer->start(16);  // Roughly 60 FPS
+
+        // Connect the frameReady signal to PixelWidget's renderFrame
+        connect(outputManager, &OutputManager::frameReady, pixelWidget, &PixelWidget::updatePixelData);
+        // Start the video thread
+        outputManager->startVideo();
     }
 }
+
 
 
 /**

@@ -27,10 +27,6 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
 
-    // Initialize video memory
-    const uint8_t* videoMemory = &ram->mem[0x2400];
-    VideoEmulator::getInstance(videoMemory); // Initialize singleton
-
     // Initialize CPU state
     state.memory = ram->mem;
     state.pc = 0;
@@ -77,10 +73,6 @@ const uint8_t* EmulatorWrapper::getVideoMemory() const {
     return &state.memory[0x2400];
 }
 
-// Provide access to the VideoEmulator
-const VideoEmulator* EmulatorWrapper::getVideoEmulator() const {
-    return VideoEmulator::getInstance(); // Return a pointer to the singleton instance
-}
 
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {

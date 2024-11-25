@@ -40,8 +40,9 @@ set(PROJECT_SOURCES
 
         # output manager includes
         outputmanager/outputManager.cpp outputmanager/outputManager.h
-        outputmanager/videoemulator.cpp outputmanager/videoemulator.h
+
         outputmanager/audiomixer.cpp outputmanager/audiomixer.h
+
 
         # emulator includes
         disassembler/disassembler.c disassembler/disassembler.h
@@ -58,6 +59,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SpaceInvadersEmulator
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+
     )
 
 # Define target properties for Android with Qt 6 as:
