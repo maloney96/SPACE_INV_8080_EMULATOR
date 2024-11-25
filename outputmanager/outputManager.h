@@ -31,6 +31,8 @@ public:
     void startBackgroundMusic();
     void stopBackgroundMusic();
 
+    void handleSoundUpdates(uint8_t port3, uint8_t port5);
+
 signals:
     void frameReady(); // Forwarded signal for frame updates
 

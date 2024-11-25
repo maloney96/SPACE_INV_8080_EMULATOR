@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
     inputManager(nullptr),
     outputManager(nullptr),
     frameTimer(new QTimer(this)),
-    audioMixer(new AudioMixer),
+    audioMixer(AudioMixer::getInstance()),
     audioMixerThread(new QThread(this))
 {
     // load UI file

@@ -1,4 +1,5 @@
 #include "outputManager.h"
+#include "../emulator/io_bits.h"
 #include <QDebug>
 
 OutputManager* OutputManager::instance = nullptr;
@@ -122,5 +123,38 @@ void OutputManager::stopBackgroundMusic() {
         audioMixer->stopMenuMusic();
     } else {
         qWarning() << "AudioMixer not set. Cannot stop background music.";
+    }
+}
+
+void OutputManager::handleSoundUpdates(uint8_t port3, uint8_t port5) {
+    // Port 3 sounds
+    if (port3 & UFO) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/ufo_lowpitch.wav");
+    }
+    if (port3 & SHOTS) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/shoot.wav");
+    }
+    if (port3 & PLAYER_DIE) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/explosion.wav");
+    }
+    if (port3 & INVADER_DIE) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/invaderkilled.wav");
+    }
+
+    // Port 5 sounds
+    if (port5 & FLEET1) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader1.wav");
+    }
+    if (port5 & FLEET2) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader2.wav");
+    }
+    if (port5 & FLEET3) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader3.wav");
+    }
+    if (port5 & FLEET4) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader4.wav");
+    }
+    if (port5 & UFO_HIT) {
+        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/ufo_highpitch.wav");
     }
 }

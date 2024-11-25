@@ -11,6 +11,7 @@
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
 #include "../memory/mem_utils.h"
+#include "../outputmanager/outputManager.h"
 #include "ioports_t.h"
 
 class EmulatorWrapper : public QObject {

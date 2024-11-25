@@ -143,6 +143,7 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
         break;
     case 3:
         state.ioports.write03 = opcode[2];
+        OutputManager::getInstance()->handleSoundUpdates(state.ioports.write03, state.ioports.write05);
         break;
     case 4:
         shift0 = shift1;
@@ -150,6 +151,7 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
         break;
     case 5:
         state.ioports.write05 = opcode[2];
+        OutputManager::getInstance()->handleSoundUpdates(state.ioports.write03, state.ioports.write05);
         break;
     case 6:
         state.ioports.write06 = opcode[2];

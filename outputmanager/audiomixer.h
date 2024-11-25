@@ -17,10 +17,10 @@ class AudioMixer : public QObject
 
 public:
     /**
-     * @brief Constructs the AudioMixer object.
-     * @param parent Pointer to the parent QObject, default is nullptr.
+     * @brief Provides access to the singleton instance of AudioMixer.
+     * @return A pointer to the AudioMixer singleton.
      */
-    explicit AudioMixer(QObject *parent = nullptr);
+    static AudioMixer* getInstance();
 
     /**
      * @brief Destroys the AudioMixer object.
@@ -30,18 +30,18 @@ public:
     /**
      * @brief Plays the background music in a loop.
      */
-    void startMenuMusic();
+    Q_INVOKABLE void startMenuMusic();
 
     /**
      * @brief Stops the background music.
      */
-    void stopMenuMusic();
+    Q_INVOKABLE void stopMenuMusic();
 
     /**
      * @brief Plays a one-shot sound effect.
      * @param filePath Path to the sound effect file.
      */
-    void playSoundEffect(const QString &filePath);
+    Q_INVOKABLE void playSoundEffect(const QString &filePath);
 
     /**
      * @brief Initializes the audio mixer (to be called after moving to a thread).
@@ -54,6 +54,14 @@ private:
     QAmbientSound* menuMusic;      ///< Ambient sound for looping background music.
     QMediaPlayer* mediaPlayer;     ///< Media player for sound effects.
     QAudioOutput* audioOutput;     ///< Audio output for media playback.
+
+    static AudioMixer* instance;   ///< Static pointer to the singleton instance.
+
+    /**
+     * @brief Private constructor for the singleton pattern.
+     * @param parent Pointer to the parent QObject, default is nullptr.
+     */
+    explicit AudioMixer(QObject *parent = nullptr);
 
     /**
      * @brief Configures the audio engine and initializes components.

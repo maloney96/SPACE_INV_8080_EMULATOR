@@ -1,6 +1,12 @@
 #include "audiomixer.h"
 #include <QDebug>
 #include <QMediaDevices>
+#include <QSoundEffect>
+#include <QFile>
+#include <qthread.h>
+
+// Initialize static member
+AudioMixer* AudioMixer::instance = nullptr;
 
 AudioMixer::AudioMixer(QObject *parent)
     : QObject(parent),
@@ -21,6 +27,13 @@ AudioMixer::~AudioMixer() {
     delete audioEngine;
 }
 
+AudioMixer* AudioMixer::getInstance() {
+    if (!instance) {
+        instance = new AudioMixer();
+    }
+    return instance;
+}
+
 void AudioMixer::configureAudioEngine() {
     // Configure audio engine
     audioEngine->setOutputDevice(audioDevice);
@@ -38,33 +51,33 @@ void AudioMixer::configureAudioEngine() {
 void AudioMixer::startMenuMusic() {
     if (menuMusic) {
         menuMusic->play();
-        qDebug() << "Menu music started.";
     }
 }
 
 void AudioMixer::stopMenuMusic() {
     if (menuMusic) {
         menuMusic->pause();
-        qDebug() << "Menu music stopped.";
     }
 }
 
 void AudioMixer::playSoundEffect(const QString &filePath) {
-    if (filePath.startsWith(":/")) {
-        // Use QUrl::fromUserInput for resource-based URLs to ensure proper formatting
-        mediaPlayer->setSource(QUrl(QString("qrc%1").arg(filePath)));
-    } else {
-        // Handle file-based URLs
-        mediaPlayer->setSource(QUrl::fromLocalFile(filePath));
+    if (QThread::currentThread() != thread()) {
+        // Ensure the method is called in the correct thread
+        QMetaObject::invokeMethod(this, "playSoundEffect", Qt::QueuedConnection, Q_ARG(QString, filePath));
+        return;
     }
 
-    mediaPlayer->setAudioOutput(audioOutput);
-    audioOutput->setVolume(1.0); // Adjust volume as needed
-    mediaPlayer->play();
+    if (filePath.startsWith("qrc:/") || filePath.startsWith(":/")) {
+        QSoundEffect* soundEffect = new QSoundEffect(this);
+        QUrl soundUrl = QUrl(filePath.startsWith("qrc:/") ? filePath : "qrc" + filePath.mid(1));
+        soundEffect->setSource(soundUrl);
+        soundEffect->setVolume(1.0);
 
-    if (mediaPlayer->error() != QMediaPlayer::NoError) {
-        qDebug() << "MediaPlayer error:" << mediaPlayer->errorString();
-    } else {
-        qDebug() << "Playing sound effect from:" << filePath;
+        connect(soundEffect, &QSoundEffect::playingChanged, this, [soundEffect]() {
+            if (!soundEffect->isPlaying()) {
+                soundEffect->deleteLater(); // Clean up after playback
+            }
+        });
+        soundEffect->play();
     }
 }
