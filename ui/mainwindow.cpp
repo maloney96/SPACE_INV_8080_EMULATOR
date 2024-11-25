@@ -181,6 +181,9 @@ void MainWindow::loadKeyMappings()
             keyMappings["p2_button"] = keycodes[4] = jsonObject["p2_button"].toInt();
             keyMappings["insert_coin"] = keycodes[5] = jsonObject["insert_coin"].toInt();
             keyMappings["exit_game"] = keycodes[6] = jsonObject["exit_game"].toInt();
+            // We don't store life settings
+            keyMappings["lives"] = 3;
+            keyMappings["extra_life_at"] = 1000;
         }
     } else {
         // If the file doesn't exist, use default from keymap.h
@@ -191,6 +194,8 @@ void MainWindow::loadKeyMappings()
         keyMappings["p2_button"] = keycodes[4] = DEFAULT_P2_BUTTON;
         keyMappings["insert_coin"] = keycodes[5] = DEFAULT_INSERT_COIN;
         keyMappings["exit_game"] = keycodes[6] = DEFAULT_EXIT;
+        keyMappings["lives"] = DEFAULT_EXTRA_LIVES;
+        keyMappings["extra_life_at"] = DEFAULT_EXTRA_LIFE_AT;
 
         // Optionally, save the default key mappings to a new file
         saveKeyMappings();

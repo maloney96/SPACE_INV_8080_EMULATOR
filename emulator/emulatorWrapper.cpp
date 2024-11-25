@@ -4,7 +4,12 @@
 
 #include "emulatorWrapper.h"
 #include "io_bits.h"
+#include <qjsondocument.h>
+#include <qjsonobject.h>
 #include <thread>
+#include <QDir>
+#include <QFile>
+#include <QString>
 
 #define INTERRUPT_INTERVAL 8333333
 #define MEMORY_SIZE 0x10000 // 64KB total memory
@@ -62,7 +67,48 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
     cycles_used =0;
     interrupt_toggle = 0; // 0 = middle of screen, 1 = bottom of screen
 
+    // Get extra life and score settings from settings file
+    loadSettings();
+
     qDebug() << "EmulatorWrapper initialized.";
+}
+
+void EmulatorWrapper::loadSettings()
+{
+    // There are only 2 new settings, so they are stored in the keymap file. We only extract what we need.
+    // set keymap path (file will be available after build).
+    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QFile keymapFile(keymapPath);
+
+    // If the keymap file exists, load it into memory
+    if (keymapFile.exists()) {
+        if (keymapFile.open(QIODevice::ReadOnly)) {
+            qDebug() << "Loading extra life settings from file";
+            QByteArray data = keymapFile.readAll();
+            QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+            QJsonObject jsonObject = jsonDoc.object();
+
+            int lives = jsonObject["lives"].toInteger(3);
+            int extra_life_at = jsonObject["extra_life_at"].toInteger(1000);
+
+            // Lives can only be 3-6, Extra Life score 1000 or 1500
+            if (lives < 3 || lives >6 || ( extra_life_at != 1000 && extra_life_at != 1500)){
+                qDebug("An invalid number of lives or life score was passed to the emulator");
+                qDebug("Lives [3, 4, 5, 6]: %d.",lives);
+                qDebug("Extra Life Score [1500, 1000]: %d.",extra_life_at);
+                qDebug("Loading with default 3 lives, extra at 1500");
+            } else {
+            // Set dipswitches
+            state.ioports.read02 |= lives - 3;
+            state.ioports.read02 |= (extra_life_at == 1000) << 3;
+            }
+
+        }
+    } else {
+        // If there's no setting data we can just leave the dipswitch settings alone and the ROM will default for us
+        qDebug("emulatorWrapper could not load life and life score settings from file.\nDefaulting to 3 lives, extra at 1500");
+    }
+
 }
 
 // Destructor

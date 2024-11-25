@@ -74,6 +74,9 @@ private:
     // VideoEmulator instance (manages read-only video memory)
     VideoEmulator* videoEmulator;
 
+    // For setting extra lives and extra life score per player preferences
+    void loadSettings();
+
     // For Emulator debugging controls
     std::condition_variable pauseCondition;
     std::mutex pauseMutex;
