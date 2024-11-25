@@ -5,7 +5,7 @@
 
 PixelWidget::PixelWidget(QWidget *parent)
     : QWidget(parent),
-    image(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT, QImage::Format_RGB32) {
+    image(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT, QImage::Format_Mono) {
     image.fill(Qt::black);  // Initialize with black
 }
 
@@ -27,8 +27,7 @@ void PixelWidget::updatePixelData() {
     for (int y = 0; y < VideoEmulator::SCREEN_HEIGHT; ++y) {
         for (int x = 0; x < VideoEmulator::SCREEN_WIDTH; ++x) {
             int pixelState = VideoEmulator::getInstance()->getPixel(x, y);
-            QRgb color = (pixelState == 1) ? qRgb(255, 255, 255) : qRgb(0, 0, 0);
-            image.setPixel(x, y, color);
+            image.setPixel(x, y, (pixelState == 1) ? 1 : 0);
         }
     }
 }

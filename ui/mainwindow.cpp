@@ -280,12 +280,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
 
             // restore navigation buttons and background
-            ui->buttonPlay->show();
-            ui->buttonPlay->setEnabled(true);
-            ui->buttonSettings->show();
-            ui->buttonSettings->setEnabled(true);
-            ui->buttonInstructions->show();
-            ui->buttonInstructions->setEnabled(true);
+            setUIMode("Menu");
             this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
             ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
         }
@@ -311,6 +306,36 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 }
 
 
+void MainWindow::setUIMode(const QString &mode)
+{
+    bool isMenuMode = (mode != "Game");
+    const QList<QPushButton*> buttons = {
+        ui->buttonPlay,
+        ui->buttonInstructions,
+        ui->buttonSettings
+    };
+
+    for (QPushButton *button : buttons) {
+        button->setVisible(isMenuMode);
+        button->setEnabled(isMenuMode);
+    }
+    if(isMenuMode){
+        setMenuBackground();
+    }else{setGameBackground();}
+}
+
+void MainWindow::setGameBackground()
+{
+    this->setStyleSheet("background-image: none;");
+    ui->frame->setStyleSheet("background-color: black;");
+}
+
+void MainWindow::setMenuBackground()
+{
+    this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
+    ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+}
+
 /**
  * @brief Slot triggered when the "Play Game" button is clicked.
  *
@@ -321,24 +346,19 @@ void MainWindow::onButtonPlayClicked()
 {
     qDebug() << "Play Game button clicked! Starting the game...";
 
+    setUIMode("Game");
+
     if (audioMixer) {
         QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
     }
 
     // Hide navigation buttons and setup the game environment
-    ui->buttonPlay->hide();
-    ui->buttonPlay->setEnabled(false);
-    ui->buttonInstructions->hide();
-    ui->buttonInstructions->setEnabled(false);
-    ui->buttonSettings->hide();
-    ui->buttonSettings->setEnabled(false);
+
 
     this->setStyleSheet("background-image: none;");
     ui->frame->setStyleSheet("background-color: black;");
 
     loadKeyMappings();
-
-
 
     if (!isGameRunning) {
         inputManager = &InputManager::getInstance();

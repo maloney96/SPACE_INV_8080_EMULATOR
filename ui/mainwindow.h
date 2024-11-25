@@ -34,7 +34,6 @@
 #include "../inputManager/inputManager.h"
 #include "../outputmanager/outputManager.h"
 #include "../outputmanager/audiomixer.h"
-#include "../outputmanager/videoemulator.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -93,6 +92,9 @@ private:
     void loadKeyMappings();
     void saveKeyMappings();
     void stopAudioMixer();
+    void setUIMode(const QString &mode);
+    void setGameBackground();
+    void setMenuBackground();
 };
 
 #endif // MAINWINDOW_H

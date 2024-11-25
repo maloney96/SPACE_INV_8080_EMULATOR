@@ -50,9 +50,21 @@ void AudioMixer::stopMenuMusic() {
 }
 
 void AudioMixer::playSoundEffect(const QString &filePath) {
-    mediaPlayer->setSource(QUrl::fromLocalFile(filePath));
+    if (filePath.startsWith(":/")) {
+        // Use QUrl::fromUserInput for resource-based URLs to ensure proper formatting
+        mediaPlayer->setSource(QUrl(QString("qrc%1").arg(filePath)));
+    } else {
+        // Handle file-based URLs
+        mediaPlayer->setSource(QUrl::fromLocalFile(filePath));
+    }
+
     mediaPlayer->setAudioOutput(audioOutput);
     audioOutput->setVolume(1.0); // Adjust volume as needed
     mediaPlayer->play();
-    qDebug() << "Playing sound effect from:" << filePath;
+
+    if (mediaPlayer->error() != QMediaPlayer::NoError) {
+        qDebug() << "MediaPlayer error:" << mediaPlayer->errorString();
+    } else {
+        qDebug() << "Playing sound effect from:" << filePath;
+    }
 }

@@ -7,8 +7,8 @@
 /**
  * @brief PixelWidget is responsible for rendering the video frames.
  *
- * This widget renders a frame of pixels based on the data retrieved
- * from the emulator's video memory.
+ * This widget renders a frame of pixels based on the binary data
+ * retrieved from the emulator's video memory.
  */
 class PixelWidget : public QWidget {
     Q_OBJECT
