@@ -1,7 +1,3 @@
-//
-// Created by Colin Cummins on 10/20/24.
-//
-
 #include "emulatorWrapper.h"
 #include "io_bits.h"
 #include <qjsondocument.h>
@@ -28,17 +24,13 @@ EmulatorWrapper& EmulatorWrapper::getInstance() {
 }
 
 // Private constructor
-EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
+EmulatorWrapper::EmulatorWrapper() : running(false) {
     qDebug() << "Creating EmulatorWrapper...";
 
     // Allocate memory and load ROM
     ram = create_mem_block(MEMORY_SIZE);
     load_rom(ram, "invaders.rom");
     qDebug() << "ROM Loaded";
-
-    // Initialize video memory read-only interface
-    const uint8_t* videoMemory = &ram->mem[0x2400];
-    videoEmulator = new VideoEmulator(videoMemory);
 
     // Initialize CPU state
     state.memory = ram->mem;
@@ -56,15 +48,15 @@ EmulatorWrapper::EmulatorWrapper() : running(false), videoEmulator(nullptr) {
     state.ioports.write05 = 0;
     state.ioports.write06 = 0;
 
-    //Shift registers for bit shifting hardware
-    shift0 = 0; //Low register
-    shift1 = 0; //High register
-    shift_amt = 0; //Shift amount
+    // Shift registers for bit shifting hardware
+    shift0 = 0; // Low register
+    shift1 = 0; // High register
+    shift_amt = 0; // Shift amount
 
     // Initialize timer for interrupts
     previous_interrupt_time = std::chrono::high_resolution_clock::now();
     previous_cycle_time = previous_interrupt_time;
-    cycles_used =0;
+    cycles_used = 0;
     interrupt_toggle = 0; // 0 = middle of screen, 1 = bottom of screen
 
     // Get extra life and score settings from settings file
@@ -113,7 +105,6 @@ void EmulatorWrapper::loadSettings()
 
 // Destructor
 EmulatorWrapper::~EmulatorWrapper() {
-    delete videoEmulator;
     delete ram;
     qDebug() << "EmulatorWrapper destroyed.";
 }
@@ -128,51 +119,6 @@ const uint8_t* EmulatorWrapper::getVideoMemory() const {
     return &state.memory[0x2400];
 }
 
-// Provide access to the VideoEmulator
-const VideoEmulator* EmulatorWrapper::getVideoEmulator() const {
-    return videoEmulator;
-}
-
-// Special handling for OUT instructions
-void EmulatorWrapper::handleOUT(unsigned char* opcode) {
-    switch(opcode[1]){
-    //Change shift amount
-    case 2:
-        shift_amt = state.a & 0x7;
-        break;
-    case 3:
-        state.ioports.write03 = opcode[2];
-        break;
-    //Write to shift register
-    case 4:
-        shift0 = shift1;
-        shift1 = state.a;
-        break;
-    case 5:
-        state.ioports.write05 = opcode[2];
-        break;
-    case 6:
-        state.ioports.write06 = opcode[2];
-        break;
-    }
-}
-
-void EmulatorWrapper::handleIN(unsigned char* opcode){
-    switch(opcode[1]){
-    //Regular read of input port
-    case 0: state.a = state.ioports.read00; break;
-    case 1: state.a = state.ioports.read01; break;
-    case 2: state.a = state.ioports.read02; break;
-
-    //Engage bitshifter
-    //Method adapted from Emulator101 code
-    case 3:
-        uint16_t v = (shift1<<8) | shift0;
-        state.ioports.read03 = ((v >> (8 - shift_amt)) & 0xff);
-        state.a = state.ioports.read03;
-        break;
-    }
-}
 
 // Emulator cycle execution
 void EmulatorWrapper::runCycle() {
@@ -182,34 +128,27 @@ void EmulatorWrapper::runCycle() {
         pauseCondition.wait(lock, [this]() { return !paused; });
     }
 
-    // Get current time for cycle synchronization and interrupt generation
     auto current_timepoint = std::chrono::high_resolution_clock::now();
 
-    if (current_timepoint - previous_cycle_time >= std::chrono::nanoseconds(cycles_used * NS_PER_CYCLE)){
-        // Opcode handling and cycle emulation
-        // Carried out if enough time has elapsed since previous cycle
-
-        // The bulk of IN/OUT opcode handling is done in the wrapper to keep machine-specific elements out of emulator
-        // This method adapted from Emulator101 approach
+    if (current_timepoint - previous_cycle_time >= std::chrono::nanoseconds(cycles_used * NS_PER_CYCLE)) {
         previous_cycle_time = current_timepoint;
 
-        unsigned char *opcode = &state.memory[state.pc];
-        if (*opcode == 0xd3) {
-        EmulatorWrapper::handleOUT(opcode);
-        } else if (*opcode == 0xdb){
-        EmulatorWrapper::handleIN(opcode);
+        unsigned char* opcode = &state.memory[state.pc];
+        if (*opcode == 0xd3) { // OUT instruction
+            handleOUT(opcode);
+        } else if (*opcode == 0xdb) { // IN instruction
+            handleIN(opcode);
         }
         cycles_used = emulate_8080cpu(&state);
     }
 
-    // Handle interrupts
     if ((current_timepoint - previous_interrupt_time) > std::chrono::nanoseconds(INTERRUPT_INTERVAL)) {
         if (state.int_enable) {
-            int interrupt_num = interrupt_toggle + 1; // 1 for mid-screen, 2 for bottom
+            int interrupt_num = interrupt_toggle + 1;
             generateInterrupt(&state, interrupt_num);
             state.int_enable = false;
             previous_interrupt_time = current_timepoint;
-            interrupt_toggle ^= 1; // Toggle interrupt state
+            interrupt_toggle ^= 1;
         }
     }
 }
@@ -227,7 +166,7 @@ void EmulatorWrapper::startEmulation() {
     running = true;
     qDebug() << "Starting emulation...";
     while (running) {
-         // Wait if paused and not stepping
+        // Wait if paused and not stepping
         {
             std::unique_lock<std::mutex> lock(pauseMutex);
             pauseCondition.wait(lock, [this]() { return !paused || stepping; });
@@ -235,7 +174,6 @@ void EmulatorWrapper::startEmulation() {
 
         runCycle();
 
-        // If stepping, clear the stepping flag and re-enter pause mode
         if (stepping) {
             std::lock_guard<std::mutex> lock(pauseMutex);
             stepping = false;
@@ -244,52 +182,71 @@ void EmulatorWrapper::startEmulation() {
     }
 }
 
+void EmulatorWrapper::handleOUT(unsigned char* opcode) {
+    uint8_t newly_triggered_ports{0};
+    switch (opcode[1]) {
+    case 2:
+        shift_amt = state.a & 0x7;
+        break;
+    case 3:
+        OutputManager::getInstance()->handleSoundUpdates(3, state.ioports.write03, state.a);
+        state.ioports.write03 = state.a;
+        break;
+    case 4:
+        shift0 = shift1;
+        shift1 = state.a;
+        break;
+    case 5:
+        OutputManager::getInstance()->handleSoundUpdates(5, state.ioports.write05, state.a);
+        state.ioports.write05 = state.a;
+        break;
+    case 6:
+        state.ioports.write06 = opcode[2];
+        break;
+    }
+}
+
+void EmulatorWrapper::handleIN(unsigned char* opcode) {
+    switch (opcode[1]) {
+    case 0:
+        state.a = state.ioports.read00;
+        break;
+    case 1:
+        state.a = state.ioports.read01;
+        break;
+    case 2:
+        state.a = state.ioports.read02;
+        break;
+    case 3:
+        uint16_t v = (shift1 << 8) | shift0;
+        state.ioports.read03 = ((v >> (8 - shift_amt)) & 0xff);
+        state.a = state.ioports.read03;
+        break;
+    }
+}
+
+// Pause emulation
 void EmulatorWrapper::pauseEmulation() {
     std::lock_guard<std::mutex> lock(pauseMutex);
     paused = true;
-    pauseCondition.notify_all(); // Notify any waiting threads
+    pauseCondition.notify_all();
     qDebug() << "Emulation paused.";
 }
 
+// Resume emulation
 void EmulatorWrapper::resumeEmulation() {
     std::lock_guard<std::mutex> lock(pauseMutex);
     paused = false;
-    pauseCondition.notify_all(); // Notify any waiting threads
+    pauseCondition.notify_all();
     qDebug() << "Emulation resumed.";
 }
 
+// Step emulation
 void EmulatorWrapper::stepEmulation() {
     if (paused) {
         stepping = true;
         qDebug() << "Stepping one cycle.";
     } else {
         qDebug() << "Cannot step while running. Pause the emulator first.";
-    }
-}
-
-// Dummy function for IO testing
-void EmulatorWrapper::dummyIOportReader() {
-    std::string iostate;
-
-    if (state.ioports.read01 & CREDIT) {
-        iostate.append("CREDIT ");
-    }
-    if (state.ioports.read01 & P2START) {
-        iostate.append("P2START ");
-    }
-    if (state.ioports.read01 & P1START) {
-        iostate.append("P1START ");
-    }
-    if (state.ioports.read01 & P1SHOT) {
-        iostate.append("P1SHOT ");
-    }
-    if (state.ioports.read01 & P1LEFT) {
-        iostate.append("P1LEFT ");
-    }
-    if (state.ioports.read01 & P1RIGHT) {
-        iostate.append("P1RIGHT ");
-    }
-    if (!iostate.empty()) {
-        qDebug() << QString::fromStdString(iostate);
     }
 }

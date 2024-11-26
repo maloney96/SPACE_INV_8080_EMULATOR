@@ -79,7 +79,7 @@ InputManager::~InputManager() {
  * This function processes the input to move the player character to the left.
  */
 void InputManager::moveLeft() {
-    qDebug() << "Move left";
+    //qDebug() << "Move left";
     ioports_ptr->read01 |= P1LEFT;
 }
 
@@ -89,7 +89,7 @@ void InputManager::moveLeft() {
  * This function processes the input to move the player character to the right.
  */
 void InputManager::moveRight() {
-    qDebug() << "Move right";
+    //qDebug() << "Move right";
     ioports_ptr->read01 |= P1RIGHT;
 }
 
@@ -99,7 +99,7 @@ void InputManager::moveRight() {
  * This function processes the input corresponding to the first player's action button.
  */
 void InputManager::p1Button() {
-    qDebug() << "P1 Button";
+    //qDebug() << "P1 Button";
     ioports_ptr->read01 |= P1START;
 }
 
@@ -109,7 +109,7 @@ void InputManager::p1Button() {
  * This function processes the input corresponding to the second player's action button.
  */
 void InputManager::p2Button() {
-    qDebug() << "P2 Button";
+    //qDebug() << "P2 Button";
     ioports_ptr->read01 |= P2START;
 }
 
@@ -119,7 +119,7 @@ void InputManager::p2Button() {
  * This function processes the input corresponding to the fire action.
  */
 void InputManager::fireButton() {
-    qDebug() << "Fire Button";
+    //qDebug() << "Fire Button";
     ioports_ptr->read01 |= P1SHOT;
 }
 
@@ -130,7 +130,7 @@ void InputManager::fireButton() {
  * This function processes the input to simulate inserting a coin into the game.
  */
 void InputManager::insertCoin() {
-    qDebug() << "Coin Inserted";
+    //qDebug() << "Coin Inserted";
     ioports_ptr->read01 |= CREDIT;
 }
 
@@ -165,5 +165,5 @@ void InputManager::insertCoinKeyup() {
  * This function processes the input to exit the game.
  */
 void InputManager::exitGame(){
-    qDebug() << "Game Exited";
+    //qDebug() << "Game Exited";
 }

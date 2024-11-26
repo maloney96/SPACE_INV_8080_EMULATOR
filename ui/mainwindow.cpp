@@ -28,7 +28,6 @@
 #include "settings.h"
 #include "../inputmanager/keymap.h"
 #include "../outputmanager/outputManager.h"
-#include "../outputmanager/videoemulator.h"
 #include "../inputmanager/romassembler.h"
 
 #include <QDebug>
@@ -50,17 +49,22 @@
  * @param parent Pointer to the parent widget, default is nullptr.
  */
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , keycodes(7)
-    , inputManager(nullptr)
-    , outputManager(nullptr)
-    , frameTimer(new QTimer(this))
+    : QMainWindow(parent),
+    ui(new Ui::MainWindow),
+    keycodes(7),
+    inputManager(nullptr),
+    outputManager(nullptr),
+    frameTimer(new QTimer(this)),
+    audioMixer(AudioMixer::getInstance()),
+    audioMixerThread(new QThread(this))
 {
     // load UI file
     ui->setupUi(this);
-    setMinimumSize(VideoEmulator::SCREEN_WIDTH, VideoEmulator::SCREEN_HEIGHT);
+    setMinimumSize(OutputManager::SCREEN_WIDTH, OutputManager::SCREEN_HEIGHT);
 
+    audioMixer->moveToThread(audioMixerThread);
+    audioMixerThread->start();
+    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
 
     // assembles .ROM file from segragated files.
     RomAssembler r = RomAssembler();
@@ -144,6 +148,8 @@ MainWindow::~MainWindow()
         pixelWidget->setGeometry(ui->frame->rect());
         pixelWidget->show();
     }
+
+    stopAudioMixer();
 
     // Clean up UI
     delete ui;
@@ -278,12 +284,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
 
             // restore navigation buttons and background
-            ui->buttonPlay->show();
-            ui->buttonPlay->setEnabled(true);
-            ui->buttonSettings->show();
-            ui->buttonSettings->setEnabled(true);
-            ui->buttonInstructions->show();
-            ui->buttonInstructions->setEnabled(true);
+            setUIMode("Menu");
             this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
             ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
         }
@@ -309,29 +310,61 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event)
 }
 
 
+void MainWindow::setUIMode(const QString &mode)
+{
+    bool isMenuMode = (mode != "Game");
+    const QList<QPushButton*> buttons = {
+        ui->buttonPlay,
+        ui->buttonInstructions,
+        ui->buttonSettings
+    };
+
+    for (QPushButton *button : buttons) {
+        button->setVisible(isMenuMode);
+        button->setEnabled(isMenuMode);
+    }
+    if(isMenuMode){
+        setMenuBackground();
+    }else{setGameBackground();}
+}
+
+void MainWindow::setGameBackground()
+{
+    this->setStyleSheet("background-image: none;");
+    ui->frame->setStyleSheet("background-color: black;");
+}
+
+void MainWindow::setMenuBackground()
+{
+    this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
+    ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+}
+
 /**
  * @brief Slot triggered when the "Play Game" button is clicked.
  *
  * This function initializes the game environment by hiding navigation buttons, setting up the InputManager in a separate thread,
  * loading key mappings, and displaying the OpenGL widget for the game.
  */
-void MainWindow::onButtonPlayClicked()
-{
+void MainWindow::onButtonPlayClicked() {
     qDebug() << "Play Game button clicked! Starting the game...";
 
-    // Hide navigation buttons and setup the game environment
-    ui->buttonPlay->hide();
-    ui->buttonPlay->setEnabled(false);
-    ui->buttonInstructions->hide();
-    ui->buttonInstructions->setEnabled(false);
-    ui->buttonSettings->hide();
-    ui->buttonSettings->setEnabled(false);
+    // Set UI mode to "Game"
+    setUIMode("Game");
 
+    // Stop menu music if the AudioMixer is set
+    if (audioMixer) {
+        QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
+    }
+
+    // Adjust the UI appearance for the game
     this->setStyleSheet("background-image: none;");
     ui->frame->setStyleSheet("background-color: black;");
 
+    // Load key mappings for the game
     loadKeyMappings();
 
+    // Start the InputManager thread if not already running
     if (!isGameRunning) {
         inputManager = &InputManager::getInstance();
         inputManager->moveToThread(&inputManagerThread);
@@ -339,25 +372,28 @@ void MainWindow::onButtonPlayClicked()
         isGameRunning = true;
     }
 
+    // Initialize and show the PixelWidget for rendering
     if (!pixelWidget) {
         pixelWidget = new PixelWidget(ui->frame);
         pixelWidget->setGeometry(ui->frame->rect());
         pixelWidget->show();
     }
 
+    // Initialize and start the OutputManager
     if (!outputManager) {
         outputManager = OutputManager::getInstance();
+        outputManager->initializeVideo(); // Set up video memory
         outputManager->moveToThread(&outputManagerThread);
         outputManagerThread.start();
 
-        // Connect frame updates to rendering
-        connect(frameTimer, &QTimer::timeout, this, [&]() {
-            QMetaObject::invokeMethod(outputManager, "updateFrame", Qt::QueuedConnection);
-            pixelWidget->renderFrame(outputManager->getVideoEmulator());
-        });
-        frameTimer->start(16);  // Roughly 60 FPS
+
+        // Connect the frameReady signal to PixelWidget's renderFrame
+        connect(outputManager, &OutputManager::frameReady, pixelWidget, &PixelWidget::updatePixelData);
+        // Start the video thread
+        outputManager->startVideo();
     }
 }
+
 
 
 /**
@@ -433,3 +469,16 @@ void MainWindow::resizeEvent(QResizeEvent *event)
         pixelWidget->setGeometry(ui->frame->rect());
     }
 }
+
+void MainWindow::stopAudioMixer()
+{
+    if (audioMixerThread->isRunning()) {
+        QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
+        audioMixerThread->quit();
+        audioMixerThread->wait();
+        delete audioMixer;
+        delete audioMixerThread;
+        qDebug() << "AudioMixer thread stopped and cleaned up.";
+    }
+}
+

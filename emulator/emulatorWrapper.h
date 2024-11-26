@@ -4,14 +4,15 @@
 #include <QObject>
 #include <QDebug>
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
+#include <atomic>
 #include "../memory/memory.h"
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
 #include "../memory/mem_utils.h"
-#include "../outputmanager/videoemulator.h"
+#include "../outputmanager/outputManager.h"
 #include "ioports_t.h"
-#include <condition_variable>
-#include <mutex>
 
 class EmulatorWrapper : public QObject {
     Q_OBJECT
@@ -25,20 +26,19 @@ public:
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
     void cleanup();
+
+    // Used for handling input output
     ioports_t* getIOptr();
 
     // Provide access to video memory (read-only)
     const uint8_t* getVideoMemory() const;
 
-    // Provide access to VideoEmulator for rendering or analysis
-    const VideoEmulator* getVideoEmulator() const;
-
 public slots:
     void startEmulation();
     void runCycle();
-    void pauseEmulation();       // Pause emulation
-    void resumeEmulation();      // Resume emulation
-    void stepEmulation();        // Step one cycle
+    void pauseEmulation();
+    void resumeEmulation();
+    void stepEmulation();
 
 private:
     // Private constructor (singleton pattern)
@@ -67,7 +67,7 @@ private:
     uint8_t shift1;
     uint8_t shift_amt;
 
-    // We handle IN and OUT opcodes in the wrapper to avoid introducing extra elements like bitshift hardware into emulator core
+    // Handle IN and OUT opcodes
     void handleOUT(unsigned char* opcode);
     void handleIN(unsigned char* opcode);
 

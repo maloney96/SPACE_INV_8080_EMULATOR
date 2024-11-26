@@ -12,31 +12,39 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools OpenGLWidgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets LinguistTools Multimedia SpatialAudio OpenGLWidgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools Multimedia SpatialAudio OpenGLWidgets)
 
 set(TS_FILES SpaceInvadersEmulator_en_US.ts)
 
 set(PROJECT_SOURCES
         main.cpp
         ${TS_FILES}
+
+        #resources
         images/Celestial.png images/spaceSky.jpg images/Wisdom.png
         ROM/invaders.e ROM/invaders.f ROM/invaders.g ROM/invaders.h
         resources.qrc
 
+        # input Manager includes
         inputmanager/inputManager.cpp inputmanager/inputManager.h inputmanager/keymap.h
         inputmanager/debugwrapper.cpp inputmanager/debugwrapper.h
         inputmanager/romassembler.cpp inputmanager/romassembler.h
 
+        # UI includes
         ui/instructions.cpp ui/instructions.h ui/instructions.ui
         ui/mainwindow.cpp ui/mainwindow.h ui/mainwindow.ui
         ui/settings.h ui/settings.cpp ui/settings.ui
         ui/setkeydialog.h ui/setkeydialog.cpp ui/setkeydialog.ui
+        ui/pixelwidget.cpp ui/pixelwidget.h
 
-
+        # output manager includes
         outputmanager/outputManager.cpp outputmanager/outputManager.h
-        outputmanager/videoemulator.cpp outputmanager/videoemulator.h
 
+        outputmanager/audiomixer.cpp outputmanager/audiomixer.h
+
+
+        # emulator includes
         disassembler/disassembler.c disassembler/disassembler.h
         emulator/emulator.c emulator/emulator.h
         emulator/emulatorWrapper.cpp emulator/emulatorWrapper.h
@@ -44,7 +52,7 @@ set(PROJECT_SOURCES
         memory/mem_utils.c memory/mem_utils.h
         memory/memory.c memory/memory.h
 
-        ui/pixelwidget.cpp ui/pixelwidget.h
+
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -77,7 +85,10 @@ else()
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-target_link_libraries(SpaceInvadersEmulator PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets)
+target_link_libraries(SpaceInvadersEmulator PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::OpenGLWidgets
+    Qt${QT_VERSION_MAJOR}::Multimedia Qt${QT_VERSION_MAJOR}::SpatialAudio
+)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
