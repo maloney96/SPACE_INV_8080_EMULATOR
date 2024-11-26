@@ -143,22 +143,16 @@ void EmulatorWrapper::handleOUT(unsigned char* opcode) {
         shift_amt = state.a & 0x7;
         break;
     case 3:
-        if(state.a != state.ioports.write03){
-        newly_triggered_ports = ~state.ioports.write03 & state.a;
+        OutputManager::getInstance()->handleSoundUpdates(3, state.ioports.write03, state.a);
         state.ioports.write03 = state.a;
-        OutputManager::getInstance()->handleSoundUpdates(3, newly_triggered_ports);
-        }
         break;
     case 4:
         shift0 = shift1;
         shift1 = state.a;
         break;
     case 5:
-        if(state.a != state.ioports.write05){
-        newly_triggered_ports = ~state.ioports.write05 & state.a;
-        OutputManager::getInstance()->handleSoundUpdates(5, newly_triggered_ports);
+        OutputManager::getInstance()->handleSoundUpdates(5, state.ioports.write05, state.a);
         state.ioports.write05 = state.a;
-        }
         break;
     case 6:
         state.ioports.write06 = opcode[2];

@@ -126,38 +126,45 @@ void OutputManager::stopBackgroundMusic() {
     }
 }
 
-void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t port_value) {
+void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t old_value, uint8_t new_value) {
+    // Don't bother processing if nothing has changed
+    if (old_value == new_value){
+        return;
+    }
+
+    uint8_t new_bits = ~old_value & new_value;
+
     // Port 3 sounds
     if (port_num == 3){
-        if (port_value & UFO) {
+        if (new_bits & UFO) {
         AudioMixer::getInstance()->playSoundEffect("ufo_lowpitch.wav");
         }
-        if (port_value & SHOTS) {
+        if (new_bits & SHOTS) {
         AudioMixer::getInstance()->playSoundEffect("shoot.wav");
         }
-        if (port_value & PLAYER_DIE) {
+        if (new_bits & PLAYER_DIE) {
         AudioMixer::getInstance()->playSoundEffect("explosion.wav");
         }
-        if (port_value & INVADER_DIE) {
+        if (new_bits & INVADER_DIE) {
         AudioMixer::getInstance()->playSoundEffect("invaderkilled.wav");
         }
     }
 
     // Port 5 sounds
     if (port_num == 5){
-        if (port_value & FLEET1) {
+        if (new_bits & FLEET1) {
         AudioMixer::getInstance()->playSoundEffect("fastinvader1.wav");
         }
-        if (port_value & FLEET2) {
+        if (new_bits & FLEET2) {
         AudioMixer::getInstance()->playSoundEffect("fastinvader2.wav");
         }
-        if (port_value & FLEET3) {
+        if (new_bits & FLEET3) {
         AudioMixer::getInstance()->playSoundEffect("fastinvader3.wav");
         }
-        if (port_value & FLEET4) {
+        if (new_bits & FLEET4) {
         AudioMixer::getInstance()->playSoundEffect("fastinvader4.wav");
         }
-        if (port_value & UFO_HIT) {
+        if (new_bits & UFO_HIT) {
         AudioMixer::getInstance()->playSoundEffect("ufo_highpitch.wav");
         }
     }
