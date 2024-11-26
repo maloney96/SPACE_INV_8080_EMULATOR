@@ -1,8 +1,8 @@
 #include "emulatorWrapper.h"
+#include "../outputmanager/outputManager.h"
 #include "io_bits.h"
 #include <qjsondocument.h>
 #include <qjsonobject.h>
-#include <thread>
 #include <QDir>
 #include <QFile>
 #include <QString>

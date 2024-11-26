@@ -1,5 +1,6 @@
 #include "outputManager.h"
 #include "../emulator/io_bits.h"
+#include "../emulator/emulatorWrapper.h"
 #include <QDebug>
 
 OutputManager* OutputManager::instance = nullptr;

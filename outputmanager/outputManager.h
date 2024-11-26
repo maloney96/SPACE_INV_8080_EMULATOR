@@ -1,3 +1,5 @@
+#pragma once
+
 #ifndef OUTPUTMANAGER_H
 #define OUTPUTMANAGER_H
 
@@ -5,7 +7,7 @@
 #include <QTimer>
 #include <QThread>
 #include "audiomixer.h"
-#include "../emulator/emulatorWrapper.h"
+
 
 class OutputManager : public QObject {
     Q_OBJECT
