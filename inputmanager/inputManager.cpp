@@ -81,6 +81,7 @@ InputManager::~InputManager() {
 void InputManager::moveLeft() {
     //qDebug() << "Move left";
     ioports_ptr->read01 |= P1LEFT;
+    ioports_ptr->read02 |= P2LEFT;
 }
 
 /**
@@ -91,6 +92,7 @@ void InputManager::moveLeft() {
 void InputManager::moveRight() {
     //qDebug() << "Move right";
     ioports_ptr->read01 |= P1RIGHT;
+    ioports_ptr->read02 |= P2RIGHT;
 }
 
 /**
@@ -121,6 +123,7 @@ void InputManager::p2Button() {
 void InputManager::fireButton() {
     //qDebug() << "Fire Button";
     ioports_ptr->read01 |= P1SHOT;
+    ioports_ptr->read02 |= P2SHOT;
 }
 
 
@@ -137,10 +140,12 @@ void InputManager::insertCoin() {
 // Methods for handling release of keys
 void InputManager::moveLeftKeyup() {
     ioports_ptr->read01 &= ~P1LEFT;
+    ioports_ptr->read02 &= ~P2LEFT;
 }
 
 void InputManager::moveRightKeyup() {
     ioports_ptr->read01 &= ~P1RIGHT;
+    ioports_ptr->read02 &= ~P2RIGHT;
 }
 
 void InputManager::p1ButtonKeyup() {
@@ -153,6 +158,7 @@ void InputManager::p2ButtonKeyup() {
 
 void InputManager::fireButtonKeyup() {
     ioports_ptr->read01 &= ~P1SHOT;
+    ioports_ptr->read02 &= ~P2SHOT;
 }
 
 void InputManager::insertCoinKeyup() {
