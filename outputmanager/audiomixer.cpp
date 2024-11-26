@@ -4,6 +4,7 @@
 #include <QSoundEffect>
 #include <QFile>
 #include <qthread.h>
+#include <QDir>
 
 // Initialize static member
 AudioMixer* AudioMixer::instance = nullptr;
@@ -46,6 +47,59 @@ void AudioMixer::configureAudioEngine() {
     menuMusic->setSource(QUrl("qrc:/sounds/sounds/MenuTrack.mp3"));
     menuMusic->setLoops(QAmbientSound::Infinite);
     menuMusic->setVolume(0.5f);
+
+    // Prepare sound board of all playable sounds
+    constructSoundBoard();
+}
+
+void AudioMixer::constructSoundBoard() {
+    QMap<QString, QSoundEffect *> soundBoard;
+    QString resourcePath = ":/sounds/sounds"; // Path in the Qt Resource System
+    QDir dir(resourcePath);
+
+    // Check if the directory exists
+    if (!dir.exists()) {
+        qWarning() << "The sound resource folder does not exist:" << resourcePath;
+    }
+
+    // List all files in the directory
+    QStringList soundFiles = dir.entryList(QDir::Files);
+    qDebug() << soundFiles;
+
+    if (soundFiles.isEmpty()) {
+        qWarning() << "No sound files found in the resource folder:" << resourcePath;
+    }
+
+    // Debug: List all found files
+    qDebug() << "Found files:" << soundFiles;
+
+    // Populate the map with only .wav files
+    for (const QString &file : soundFiles) {
+        if (file.endsWith(".wav", Qt::CaseInsensitive)) { // Only include .wav files
+            QString key = file;                          // Use the file name as the key
+            QString filePath = resourcePath + "/" + file; // Full resource path
+            QSoundEffect *sound = new QSoundEffect(); // Create QSoundEffect object
+            sound->setSource(QUrl("qrc:/sounds/sounds/" + file)); // Set source
+            sound->moveToThread(thread());
+
+            if (sound) {
+                AudioMixer::soundBoard.insert(key, sound);      // Add to the map
+                qDebug() << "Added QSound for:" << key << "->" << filePath;
+            } else {
+                qDebug() << "Failed to create QSound for:" << filePath;
+            }
+        } else {
+            qDebug() << "Skipping non-.wav file:" << file;
+        }
+    }
+
+    if (soundBoard.isEmpty()) {
+        qDebug() << "No .wav files found in the resource folder:" << resourcePath;
+    } else {
+        qDebug() << "Soundboard keys:";
+        qDebug() << AudioMixer::soundBoard.keys();
+    }
+
 }
 
 void AudioMixer::startMenuMusic() {
@@ -60,24 +114,22 @@ void AudioMixer::stopMenuMusic() {
     }
 }
 
-void AudioMixer::playSoundEffect(const QString &filePath) {
-    if (QThread::currentThread() != thread()) {
-        // Ensure the method is called in the correct thread
-        QMetaObject::invokeMethod(this, "playSoundEffect", Qt::QueuedConnection, Q_ARG(QString, filePath));
+void AudioMixer::playSoundEffect(const QString &fileName) {
+    if (!AudioMixer::soundBoard.contains(fileName)) {
+        qWarning() << "Sound effect not found for file:" << fileName;
         return;
     }
 
-    if (filePath.startsWith("qrc:/") || filePath.startsWith(":/")) {
-        QSoundEffect* soundEffect = new QSoundEffect(this);
-        QUrl soundUrl = QUrl(filePath.startsWith("qrc:/") ? filePath : "qrc" + filePath.mid(1));
-        soundEffect->setSource(soundUrl);
-        soundEffect->setVolume(1.0);
-
-        connect(soundEffect, &QSoundEffect::playingChanged, this, [soundEffect]() {
-            if (!soundEffect->isPlaying()) {
-                soundEffect->deleteLater(); // Clean up after playback
-            }
-        });
-        soundEffect->play();
+    QSoundEffect* sound = AudioMixer::soundBoard[fileName];
+    if (!sound) {
+        qWarning() << "Null QSoundEffect for file:" << fileName;
+        return;
     }
+
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(sound, "play", Qt::QueuedConnection);
+    } else {
+        sound->play();
+    }
+
 }

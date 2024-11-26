@@ -26,6 +26,8 @@ public:
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
     void cleanup();
+
+    // Used for handling input output
     ioports_t* getIOptr();
 
     // Provide access to video memory (read-only)

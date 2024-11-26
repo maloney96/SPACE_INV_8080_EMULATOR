@@ -7,6 +7,9 @@
 #include <QAudioDevice>
 #include <QMediaPlayer>
 #include <QAudioOutput>
+#include <QMap>
+#include <QString>
+#include <QSoundEffect>
 
 /**
  * @brief The AudioMixer class handles all audio-related functionality in the application.
@@ -56,6 +59,9 @@ private:
     QAudioOutput* audioOutput;     ///< Audio output for media playback.
 
     static AudioMixer* instance;   ///< Static pointer to the singleton instance.
+
+    void constructSoundBoard();
+    QMap<QString, QSoundEffect* > soundBoard;
 
     /**
      * @brief Private constructor for the singleton pattern.

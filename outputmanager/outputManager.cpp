@@ -126,35 +126,40 @@ void OutputManager::stopBackgroundMusic() {
     }
 }
 
-void OutputManager::handleSoundUpdates(uint8_t port3, uint8_t port5) {
+void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t port_value) {
     // Port 3 sounds
-    if (port3 & UFO) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/ufo_lowpitch.wav");
-    }
-    if (port3 & SHOTS) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/shoot.wav");
-    }
-    if (port3 & PLAYER_DIE) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/explosion.wav");
-    }
-    if (port3 & INVADER_DIE) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/invaderkilled.wav");
+    if (port_num == 3){
+        if (port_value & UFO) {
+        AudioMixer::getInstance()->playSoundEffect("ufo_lowpitch.wav");
+        }
+        if (port_value & SHOTS) {
+        AudioMixer::getInstance()->playSoundEffect("shoot.wav");
+        }
+        if (port_value & PLAYER_DIE) {
+        AudioMixer::getInstance()->playSoundEffect("explosion.wav");
+        }
+        if (port_value & INVADER_DIE) {
+        AudioMixer::getInstance()->playSoundEffect("invaderkilled.wav");
+        }
     }
 
     // Port 5 sounds
-    if (port5 & FLEET1) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader1.wav");
+    if (port_num == 5){
+        if (port_value & FLEET1) {
+        AudioMixer::getInstance()->playSoundEffect("fastinvader1.wav");
+        }
+        if (port_value & FLEET2) {
+        AudioMixer::getInstance()->playSoundEffect("fastinvader2.wav");
+        }
+        if (port_value & FLEET3) {
+        AudioMixer::getInstance()->playSoundEffect("fastinvader3.wav");
+        }
+        if (port_value & FLEET4) {
+        AudioMixer::getInstance()->playSoundEffect("fastinvader4.wav");
+        }
+        if (port_value & UFO_HIT) {
+        AudioMixer::getInstance()->playSoundEffect("ufo_highpitch.wav");
+        }
     }
-    if (port5 & FLEET2) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader2.wav");
-    }
-    if (port5 & FLEET3) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader3.wav");
-    }
-    if (port5 & FLEET4) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/fastinvader4.wav");
-    }
-    if (port5 & UFO_HIT) {
-        AudioMixer::getInstance()->playSoundEffect("qrc:/sounds/sounds/ufo_highpitch.wav");
-    }
+
 }
