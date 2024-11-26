@@ -126,6 +126,10 @@ void Settings::setDefaultKeyMap() {
     defaultKeymapJson["insert_coin"] = DEFAULT_INSERT_COIN;
     defaultKeymapJson["exit_game"] = DEFAULT_EXIT;
 
+    //Extra Life and Score defaults
+    defaultKeymapJson["extra_lives"] = DEFAULT_EXTRA_LIVES;
+    defaultKeymapJson["extra_life_at"] = DEFAULT_EXTRA_LIFE_AT;
+
     // Try to open the keymap file for writing
     if (keymapFile.open(QIODevice::WriteOnly)) {
         // Convert the JSON object to a JSON document and write it to the file
@@ -248,6 +252,11 @@ void Settings::onOkButtonClicked()
     updatedKeymapJson["p2_button"] = p2KeySeq[0].toCombined();
     updatedKeymapJson["insert_coin"] = insertCoinKeySeq[0].toCombined();
     updatedKeymapJson["exit_game"] = exitGameKeySeq[0].toCombined();
+
+    // Store values for extra lives and extra life score
+    qDebug("UI lives value %d",ui->spinBoxLives->value());
+    updatedKeymapJson["lives"] = ui->spinBoxLives->value();
+    updatedKeymapJson["extra_life_at"] = ui->spinBoxExtraLifeScore->value();
 
     // Try to open the keymap file for writing
     if (keymapFile.open(QIODevice::WriteOnly)) {

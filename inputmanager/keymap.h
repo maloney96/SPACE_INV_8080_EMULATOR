@@ -87,52 +87,16 @@
  */
 #define DEFAULT_EXIT Qt::Key_Escape             // ESCAPE
 
-/**
- * @def LIVES_3
- * @brief Key code to set the number of lives to 3.
- *
- * Uses an ASCII code not typically found on a keyboard.
- */
-#define LIVES_3 0x0a3
+// Some other default settings to store:
 
-/**
- * @def LIVES_4
- * @brief Key code to set the number of lives to 4.
- *
- * Uses an ASCII code not typically found on a keyboard.
+/** @def DEFAULT_EXTRA_LIVES
+ *  @brief Default number of extra lives
  */
-#define LIVES_4 0x0a4
+#define DEFAULT_EXTRA_LIVES 3
 
-/**
- * @def LIVES_5
- * @brief Key code to set the number of lives to 5.
- *
- * Uses an ASCII code not typically found on a keyboard.
+/** @def DEFAULT_EXTRA_LIFE_SCORE
+ *  @brief Default score for an extra life
  */
-#define LIVES_5 0x0a5
-
-/**
- * @def LIVES_6
- * @brief Key code to set the number of lives to 6.
- *
- * Uses an ASCII code not typically found on a keyboard.
- */
-#define LIVES_6 0x0a6
-
-/**
- * @def BONUS_LIFE_1000
- * @brief Key code to set the score threshold for an extra life to 1000 points.
- *
- * Uses an ASCII code not typically found on a keyboard.
- */
-#define BONUS_LIFE_1000 0x0a7
-
-/**
- * @def BONUS_LIFE_1500
- * @brief Key code to set the score threshold for an extra life to 1500 points.
- *
- * Uses an ASCII code not typically found on a keyboard.
- */
-#define BONUS_LIFE_1500 0x0a8
+#define DEFAULT_EXTRA_LIFE_AT 1000
 
 #endif // KEYMAP_H
