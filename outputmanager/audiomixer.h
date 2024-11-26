@@ -44,7 +44,13 @@ public:
      * @brief Plays a one-shot sound effect.
      * @param filePath Path to the sound effect file.
      */
-    Q_INVOKABLE void playSoundEffect(const QString &filePath);
+    Q_INVOKABLE void playSoundEffect(const QString &filePath, bool loop = false);
+
+    /**
+     * @brief Stops a looping effect
+     * @param filePath Path to the sound effect file.
+     */
+    Q_INVOKABLE void stopSoundEffect(const QString &filePath);
 
     /**
      * @brief Initializes the audio mixer (to be called after moving to a thread).

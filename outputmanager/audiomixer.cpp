@@ -114,7 +114,32 @@ void AudioMixer::stopMenuMusic() {
     }
 }
 
-void AudioMixer::playSoundEffect(const QString &fileName) {
+void AudioMixer::playSoundEffect(const QString &fileName, bool loop) {
+    if (!AudioMixer::soundBoard.contains(fileName)) {
+        qWarning() << "Sound effect not found for file:" << fileName;
+        return;
+    }
+
+    QSoundEffect* sound = AudioMixer::soundBoard[fileName];
+    if (!sound) {
+        qWarning() << "Null QSoundEffect for file:" << fileName;
+        return;
+    }
+
+    // Used for the UFO
+    if (loop) {
+        sound->setLoopCount(QSoundEffect::Infinite);
+    }
+
+    if (QThread::currentThread() != thread()) {
+        QMetaObject::invokeMethod(sound, "play", Qt::QueuedConnection);
+    } else {
+        sound->play();
+    }
+
+}
+
+void AudioMixer::stopSoundEffect(const QString &fileName) {
     if (!AudioMixer::soundBoard.contains(fileName)) {
         qWarning() << "Sound effect not found for file:" << fileName;
         return;
@@ -127,9 +152,9 @@ void AudioMixer::playSoundEffect(const QString &fileName) {
     }
 
     if (QThread::currentThread() != thread()) {
-        QMetaObject::invokeMethod(sound, "play", Qt::QueuedConnection);
+        QMetaObject::invokeMethod(sound, "stop", Qt::QueuedConnection);
     } else {
-        sound->play();
+        sound->stop();
     }
 
 }

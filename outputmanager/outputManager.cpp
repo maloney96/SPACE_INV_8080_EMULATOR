@@ -102,9 +102,9 @@ void OutputManager::setAudioMixer(AudioMixer* mixer) {
     qDebug() << "AudioMixer set in OutputManager";
 }
 
-void OutputManager::playSoundEffect(const QString& filePath) {
+void OutputManager::playSoundEffect(const QString& filePath, bool loop = false) {
     if (audioMixer) {
-        audioMixer->playSoundEffect(filePath);
+        audioMixer->playSoundEffect(filePath, loop);
     } else {
         qWarning() << "AudioMixer not set. Cannot play sound effect.";
     }
@@ -136,9 +136,18 @@ void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t old_value, uint
 
     // Port 3 sounds
     if (port_num == 3){
+
+        //Special Handling for UFO
+        //Loop it if a new bit arrives
+        //Turn it off if the newly arrived port bit for it is 0
         if (new_bits & UFO) {
-        AudioMixer::getInstance()->playSoundEffect("ufo_lowpitch.wav");
+        AudioMixer::getInstance()->playSoundEffect("ufo_lowpitch.wav", true);
         }
+        if (!(new_value & UFO)) {
+        AudioMixer::getInstance()->stopSoundEffect("ufo_lowpitch.wav");
+        }
+
+        // Regular Port 3 handling
         if (new_bits & SHOTS) {
         AudioMixer::getInstance()->playSoundEffect("shoot.wav");
         }

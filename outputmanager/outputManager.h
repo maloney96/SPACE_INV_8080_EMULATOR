@@ -27,7 +27,7 @@ public:
 
     // Audio-related methods
     void setAudioMixer(AudioMixer* mixer);
-    void playSoundEffect(const QString& filePath);
+    void playSoundEffect(const QString& filePath, bool loop);
     void startBackgroundMusic();
     void stopBackgroundMusic();
 
