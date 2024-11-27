@@ -10,11 +10,13 @@
 #include "disassembler.h"
 #include "../inputmanager/debugwrapper.h"
 
+// Prints opcode for instruction disassembly
 int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
     unsigned char *code = &opcode_buffer[pc];
     int opbytes = 1;
     qdebug_log("%04x ", pc);
 
+    // Structs for printing instructions 
     const char *adc_cases[] = {
         "ADC B", "ADC C", "ADC D", "ADC E", "ADC H", "ADC L", "ADC M", "ADC A"
     };
@@ -58,6 +60,7 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         "XRA B", "XRA C", "XRA D", "XRA E", "XRA H", "XRA L", "XRA M", "XRA A"
     };
 
+    // Print appropriate instruction for corresponding cases
     switch (*code) {
         // No operation cases
         case 0x00:
