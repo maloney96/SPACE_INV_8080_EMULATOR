@@ -1,14 +1,24 @@
 # Space Invaders ROM Emulator
 
+### Requirements
+- Qt 6.8.0
+- Qt Creator v14.02 https://www.qt.io/download-qt-installer-oss
+- Space Invaders ROM - Taito 1978
+
 ### Installation Instructions
 
 1. Clone the repo to your local system.
-2. Install QT Creator (https://www.qt.io/download-qt-installer-oss). The team used QT Creator version 14.02 at the time of development.
-3. Obtain copy of Space Invaders ROM (four separate files), combine into a single file (cat invaders.h invaders.g invaders.f invaders.e > invaders.rom), and place combined ROM into root directory of cloned project. 
-4. Open QT Creator, click "Open Project", select CMakeLists.txt in root of directory.
-5. Hit Play button in bottom left corner of UI.
-6. Once launched, hit Play Game to launch game. Otherwise, hit Settings to configure game controls or Instructions to see brief overview of game.
-7. Enjoy!
+2. Install QT Creator
+3. Obtain copy of Space Invaders ROM (four separate files), combine into a single file...
+
+   ```cat invaders.h invaders.g invaders.f invaders.e > invaders.rom```
+
+   
+   ...and place combined ROM into root directory of cloned project. 
+5. Open QT Creator, click ```Open Project```, select ```CMakeLists.txt``` in root of directory.
+6. Hit Play button in bottom left corner of UI.
+7. Once launched, hit ```Play Game``` to launch game. Otherwise, hit ```Settings``` to configure game controls or Instructions to see brief overview of game.
+8. Enjoy!
 
 ### Discussion of Main Files
 
@@ -29,14 +39,15 @@ Note - Disassembler file is primarily for debugging. Lines involving disassemble
 ### Memory
 
 1. Place all invaders source files into the invaders folder..
-cd into the invaders folder and run the following..
-cat invaders.h invaders.g invaders.f invaders.e > invaders.rom
+cd into the invaders folder and run the following...
 
-2. cd .. into SPACE_INV_8080_EMULATOR and run make command
+```cat invaders.h invaders.g invaders.f invaders.e > invaders.rom```
 
-3. run ./emulator
+3. ```cd ..``` into SPACE_INV_8080_EMULATOR and run ```make```
 
-4. Memory MAP with contents dumped via txt file "RAM_DUMP.txt" 
+4. run ```./emulator```
+
+5. Memory MAP with contents dumped via txt file ```RAM_DUMP.txt```
 
 Memory map:
 	ROM
