@@ -243,6 +243,7 @@ int emulate_8080cpu(state_8080cpu *state) {
 	unsigned char *opcode = &state->memory[state->pc];
     int cycles = cycles_8080[*opcode]; // Get the number of cycles for the current opcode
 
+    // Uncomment below only for debugging purposes - otherwise keep as is
     //disassemble_opcode(state->memory, state->pc);
 	
 	state->pc+=1;	
