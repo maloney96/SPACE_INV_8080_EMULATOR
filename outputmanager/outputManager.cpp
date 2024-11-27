@@ -4,8 +4,10 @@
 #include <QDebug>
 
 OutputManager* OutputManager::instance = nullptr;
+QMutex OutputManager::mutex;
 
 OutputManager* OutputManager::getInstance() {
+    QMutexLocker locker(&mutex);
     if (!instance) {
         instance = new OutputManager();
     }
@@ -13,15 +15,19 @@ OutputManager* OutputManager::getInstance() {
 }
 
 void OutputManager::destroyInstance() {
+    QMutexLocker locker(&mutex);
     if (instance) {
+        instance->stopVideo(); // Ensure video operations are halted.
         delete instance;
-        instance = nullptr;
-        qDebug() << "OutputManager instance destroyed";
+        instance = nullptr; // Set instance to nullptr to avoid dangling pointer issues.
+        qDebug() << "OutputManager instance destroyed.";
     }
 }
 
 OutputManager::OutputManager(QObject* parent)
     : QObject(parent), videoMemory(nullptr), audioMixer(nullptr) {
+    qDebug() << "Starting Output Manager";
+
     // Create a dedicated thread for the timer
     timerThread = new QThread(this);
 
@@ -39,15 +45,27 @@ OutputManager::OutputManager(QObject* parent)
 
     // Stop the timer and clean up when the thread finishes
     connect(timerThread, &QThread::finished, frameTimer, &QTimer::stop);
+    qDebug() << "Output Manager started successfully";
 }
 
 OutputManager::~OutputManager() {
-    stopVideo();
+    stopVideo(); // Stop any ongoing video-related tasks.
 
-    // Clean up the timer thread
-    timerThread->quit();
-    timerThread->wait();
-    delete frameTimer;
+    // Safely clean up the timer thread.
+    if (timerThread) {
+        timerThread->quit();
+        timerThread->wait(); // Wait for the thread to finish cleanly.
+        delete timerThread;
+        timerThread = nullptr;
+    }
+
+    // Clean up the timer itself.
+    if (frameTimer) {
+        delete frameTimer;
+        frameTimer = nullptr;
+    }
+
+    qDebug() << "OutputManager destroyed successfully.";
 }
 
 void OutputManager::initializeVideo() {
@@ -163,5 +181,4 @@ void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t old_value, uint
         AudioMixer::getInstance()->playSoundEffect("ufo_highpitch.wav");
         }
     }
-
 }

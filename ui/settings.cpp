@@ -81,6 +81,8 @@ void Settings::populateKeyFields(QJsonObject map)
     ui->lineEditP2->setText(QKeySequence(map["p2_button"].toInt()).toString());
     ui->lineEditInsertCoin->setText(QKeySequence(map["insert_coin"].toInt()).toString());
     ui->lineEditExitGame->setText(QKeySequence(map["exit_game"].toInt()).toString());
+    ui->spinBoxExtraLifeScore->setValue(map["extra_life_at"].toInt());
+    ui->spinBoxLives->setValue(map["lives"].toInt());
 }
 
 /**
@@ -113,7 +115,7 @@ void Settings::OnDialogButtonBoxClicked(QAbstractButton *button)
  */
 void Settings::setDefaultKeyMap() {
     // Define the keymap file path
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
     // Create a JSON object for the default keymap
@@ -155,12 +157,12 @@ void Settings::setDefaultKeyMap() {
  */
 QJsonObject Settings::initializeKeyMap()
 {
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";  // Hidden file in the home directory
+    QString keymapPath = QDir::currentPath() + "/.settings.json";  // Hidden file in the home directory
     QFile keymapFile(keymapPath);
 
     QJsonObject keymapJson;
 
-    // Check if the keymap.json file exists
+    // Check if the settings.json file exists
     if (keymapFile.exists()) {
         // If file exists, read the key mappings
         if (keymapFile.open(QIODevice::ReadOnly)) {
@@ -195,7 +197,7 @@ QJsonObject Settings::initializeKeyMap()
  */
 void Settings::onCancelButtonClicked()
 {
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
     // Check if the file can be opened for writing
@@ -229,7 +231,7 @@ void Settings::onCancelButtonClicked()
 void Settings::onOkButtonClicked()
 {
     // Define the keymap file path
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
     // Create a JSON object to store the updated key mappings

@@ -14,7 +14,11 @@
    <string>Space Invaders</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-image: url(:/Images/images/spaceSky.jpg);</string>
+   <string notr="true">
+    background-image: url(:/Images/images/spaceSky.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+   </string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayoutMain">

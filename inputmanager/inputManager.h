@@ -14,6 +14,7 @@
 #include <QObject>  // Include QObject for threading
 #include <QDebug>
 #include <QThread>
+#include <QMutex>
 #include "../emulator/emulatorWrapper.h"
 #include "../emulator/ioports_t.h"
 
@@ -113,9 +114,10 @@ private:
      * @brief Static pointer to hold the singleton instance.
      */
     static InputManager* instance;
+    static QMutex instanceMutex;
 
     EmulatorWrapper* emulatorWrapper;
-    QThread emulatorThread;
+    QThread* emulatorThread;
 
     ioports_t* ioports_ptr {nullptr};
 

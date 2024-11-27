@@ -15,7 +15,18 @@ PixelWidget::PixelWidget(QWidget *parent)
     previous.resize(frameSz, 0);
 }
 
-PixelWidget::~PixelWidget() {}
+PixelWidget::~PixelWidget() {
+    // Disconnect from OutputManager signals
+    disconnect(OutputManager::getInstance(), nullptr, this, nullptr);
+
+    // Nullify the pointer to avoid issues
+    current = nullptr;
+
+    // Log the destruction
+    qDebug() << "PixelWidget destroyed.";
+}
+
+
 
 void PixelWidget::updatePixelData() {
     current = OutputManager::getInstance()->getFrame();

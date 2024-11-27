@@ -94,6 +94,7 @@ private:
     void setUIMode(const QString &mode);
     void setGameBackground();
     void setMenuBackground();
+void startAudioMixer();
 };
 
 #endif // MAINWINDOW_H

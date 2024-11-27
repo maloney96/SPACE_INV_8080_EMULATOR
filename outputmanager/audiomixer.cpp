@@ -13,7 +13,6 @@ AudioMixer::AudioMixer(QObject *parent)
     menuMusic(nullptr)
 {
     audioDevice = QMediaDevices::defaultAudioOutput();
-    mediaPlayer = new QMediaPlayer(this);
     audioOutput = new QAudioOutput(this);
     audioEngine = new QAudioEngine();
 
@@ -22,11 +21,47 @@ AudioMixer::AudioMixer(QObject *parent)
 }
 
 AudioMixer::~AudioMixer() {
-    delete menuMusic;
-    delete mediaPlayer;
-    delete audioOutput;
-    delete audioEngine;
+    qDebug() << "AudioMixer destructor called.";
+
+    // Stop and delete the menu music
+    if (menuMusic) {
+        menuMusic->stop();
+        QObject::disconnect(menuMusic, nullptr, nullptr, nullptr);
+        menuMusic->setSource(QUrl());
+        delete menuMusic;
+        menuMusic = nullptr;
+        qDebug() << "Menu music stopped and deleted.";
+    }
+
+    // Stop and delete all sound effects in the soundBoard
+    for (auto it = soundBoard.begin(); it != soundBoard.end(); ++it) {
+        QSoundEffect* soundEffect = it.value();
+        if (soundEffect) {
+            soundEffect->stop();
+            delete soundEffect;
+        }
+    }
+    soundBoard.clear();
+    qDebug() << "SoundBoard cleared and all sound effects deleted.";
+
+    // Delete the audio engine
+    if (audioEngine) {
+        audioEngine->stop();
+        delete audioEngine;
+        audioEngine = nullptr;
+        qDebug() << "Audio engine stopped and deleted.";
+    }
+
+    // Delete the audio output
+    if (audioOutput) {
+        delete audioOutput;
+        audioOutput = nullptr;
+        qDebug() << "Audio output deleted.";
+    }
+
+    qDebug() << "AudioMixer destructor completed.";
 }
+
 
 AudioMixer* AudioMixer::getInstance() {
     if (!instance) {
@@ -104,13 +139,14 @@ void AudioMixer::constructSoundBoard() {
 
 void AudioMixer::startMenuMusic() {
     if (menuMusic) {
+        menuMusic->stop();
         menuMusic->play();
     }
 }
 
 void AudioMixer::stopMenuMusic() {
     if (menuMusic) {
-        menuMusic->pause();
+        menuMusic->stop();
     }
 }
 
@@ -156,5 +192,4 @@ void AudioMixer::stopSoundEffect(const QString &fileName) {
     } else {
         sound->stop();
     }
-
 }

@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QThread>
+#include <QMutex>
 #include "audiomixer.h"
 
 
@@ -43,6 +44,7 @@ private:
     ~OutputManager();
 
     static OutputManager* instance;
+    static QMutex mutex;
 
     QTimer* frameTimer;    ///< Timer to emit frameReady
     QThread* timerThread;  ///< Thread for the timer

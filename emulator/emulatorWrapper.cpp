@@ -24,12 +24,20 @@ EmulatorWrapper& EmulatorWrapper::getInstance() {
 }
 
 // Private constructor
-EmulatorWrapper::EmulatorWrapper() : running(false) {
+EmulatorWrapper::EmulatorWrapper() : running(false), ram(nullptr) {
     qDebug() << "Creating EmulatorWrapper...";
 
     // Allocate memory and load ROM
     ram = create_mem_block(MEMORY_SIZE);
-    load_rom(ram, "invaders.rom");
+    if (!ram) {
+        qCritical() << "Failed to allocate memory for RAM. Emulator cannot initialize.";
+        throw std::runtime_error("Failed to allocate memory for RAM.");
+    }
+    if (load_rom(ram, "invaders.rom") != 0) {
+        qCritical() << "Failed to load ROM into memory.";
+        delete_mem_block(ram);
+        throw std::runtime_error("Failed to load ROM into memory.");
+    }
     qDebug() << "ROM Loaded";
 
     // Initialize CPU state
@@ -67,9 +75,7 @@ EmulatorWrapper::EmulatorWrapper() : running(false) {
 
 void EmulatorWrapper::loadSettings()
 {
-    // There are only 2 new settings, so they are stored in the keymap file. We only extract what we need.
-    // set keymap path (file will be available after build).
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
     // If the keymap file exists, load it into memory
@@ -105,18 +111,11 @@ void EmulatorWrapper::loadSettings()
 
 // Destructor
 EmulatorWrapper::~EmulatorWrapper() {
-    delete ram;
-    state.pc = 0;
-    state.sp = 0;
-    state.ioports.read00 = 0b00001110; // Default state for port 0
-    state.ioports.read01 = 0b00001000; // Default state for port 1
-    state.ioports.read02 = 0;
-    state.ioports.read03 = 0;
-    state.ioports.write02 = 0;
-    state.ioports.write03 = 0;
-    state.ioports.write04 = 0;
-    state.ioports.write05 = 0;
-    state.ioports.write06 = 0;
+    qDebug() << "Destroying EmulatorWrapper...";
+    cleanup(); // Ensure all resources are released
+
+    // Reset CPU state
+    state = {};
     qDebug() << "EmulatorWrapper destroyed.";
 }
 
@@ -166,7 +165,28 @@ void EmulatorWrapper::runCycle() {
 
 // Cleanup resources
 void EmulatorWrapper::cleanup() {
-    running = false;
+    if (running) {
+        running = false;
+        qDebug() << "Stopping emulation...";
+    }
+
+    // Notify any waiting threads to prevent deadlocks
+    {
+        std::lock_guard<std::mutex> lock(pauseMutex);
+        paused = false;
+        stepping = false;
+    }
+    pauseCondition.notify_all();
+
+    // Release memory resources
+    if (ram) {
+        delete_mem_block(ram);
+        ram = nullptr;
+        qDebug() << "RAM memory block released.";
+    }
+
+    // Reset CPU state
+    state = {};
     qDebug() << "EmulatorWrapper cleanup completed.";
 }
 
@@ -257,5 +277,13 @@ void EmulatorWrapper::stepEmulation() {
         qDebug() << "Stepping one cycle.";
     } else {
         qDebug() << "Cannot step while running. Pause the emulator first.";
+    }
+}
+
+void EmulatorWrapper::destroyInstance() {
+    if (instance) {
+        delete instance;  // Calls the destructor
+        instance = nullptr;
+        qDebug() << "EmulatorWrapper instance destroyed.";
     }
 }

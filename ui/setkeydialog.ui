@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Created by Ian McCubbin, 10/28/2024
-  Dialog box used to set user controls for gameplay.
--->
 <ui version="4.0">
  <class>SetKeyDialog</class>
  <widget class="QDialog" name="SetKeyDialog">
@@ -18,14 +14,14 @@
    <string>Set Key: Action</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">background-image: url(:/Images/images/spcaeSky.jpg);</string>
+   <string notr="true">background-image: url(:/Images/images/Celestial.png);</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QLabel" name="currentKeyLabel">
      <property name="styleSheet">
-      <string notr="true">color: rgb(170, 0, 0);
-font: 900 9pt &quot;Segoe UI&quot;;</string>
+      <string notr="true">color: rgb(170, 0, 255);
+font: 16pt &quot;Cooper Black&quot;;</string>
      </property>
      <property name="text">
       <string>Current key: [Key]</string>
