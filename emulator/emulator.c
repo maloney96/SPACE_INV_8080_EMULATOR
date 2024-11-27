@@ -376,7 +376,6 @@ int emulate_8080cpu(state_8080cpu *state) {
 			}
 			break;
         
-        
         // DCX cases
         case 0x0b: handle_DCX(&state->b, &state->c); break; // DCX B
         case 0x1b: handle_DCX(&state->d, &state->e); break; // DCX D
@@ -810,7 +809,6 @@ int emulate_8080cpu(state_8080cpu *state) {
                 state->pc += 2;
             break;
         
-        
         // IN case:
         // Mostly handled in the wrapper, but we leave this here so PC gets incremented and we don't trip unidentified opcode error
         case 0xdb: state->pc++; break;
@@ -973,8 +971,6 @@ int emulate_8080cpu(state_8080cpu *state) {
         default:
             unimplemented_instruction(state);
             break;
-        
-        
     }
 
     // Uncomment below for debugging purposes - otherwise keep as is
