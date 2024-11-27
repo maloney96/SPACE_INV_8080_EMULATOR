@@ -74,21 +74,6 @@ const uint8_t* OutputManager::getFrame() const {
     return videoMemory;
 }
 
-int OutputManager::getPixel(int x, int y) const {
-    if (!videoMemory) {
-        qCritical() << "Error: Video memory not initialized!";
-        return 0;
-    }
-    if (x < 0 || x >= SCREEN_WIDTH || y < 0 || y >= SCREEN_HEIGHT) {
-        return 0; // Out of bounds; treat as "off"
-    }
-
-    int byteIndex = ((x + 1) * SCREEN_HEIGHT / 8) - y / 8;
-    int bitIndex = 7 - (y % 8);
-    return (videoMemory[byteIndex] >> bitIndex) & 1;
-}
-
-
 void OutputManager::stopVideo() {
     if (timerThread->isRunning()) {
         timerThread->quit();
