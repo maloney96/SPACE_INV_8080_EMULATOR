@@ -3,7 +3,6 @@
 #include <QMediaDevices>
 #include <QSoundEffect>
 #include <QFile>
-#include <qthread.h>
 #include <QDir>
 
 // Initialize static member
@@ -11,12 +10,13 @@ AudioMixer* AudioMixer::instance = nullptr;
 
 AudioMixer::AudioMixer(QObject *parent)
     : QObject(parent),
-    audioEngine(new QAudioEngine(this)),
-    audioDevice(QMediaDevices::defaultAudioOutput()),
-    menuMusic(nullptr),
-    mediaPlayer(new QMediaPlayer(this)),
-    audioOutput(new QAudioOutput(this))
+    menuMusic(nullptr)
 {
+    audioDevice = QMediaDevices::defaultAudioOutput();
+    mediaPlayer = new QMediaPlayer(this);
+    audioOutput = new QAudioOutput(this);
+    audioEngine = new QAudioEngine();
+
     configureAudioEngine();
     qDebug() << "AudioMixer initialized.";
 }

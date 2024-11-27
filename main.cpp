@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
             break;
         }
     }
+    QThread::currentThread()->setPriority(QThread::HighPriority);
     MainWindow w;
     w.show();
     return a.exec();

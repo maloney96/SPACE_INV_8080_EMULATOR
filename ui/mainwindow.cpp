@@ -53,21 +53,20 @@ MainWindow::MainWindow(QWidget *parent)
     ui(new Ui::MainWindow),
     keycodes(7),
     inputManager(nullptr),
-    outputManager(nullptr),
-    frameTimer(new QTimer(this)),
-    audioMixer(AudioMixer::getInstance()),
-    audioMixerThread(new QThread(this))
+    outputManager(nullptr)
 {
     // load UI file
     ui->setupUi(this);
     setMinimumSize(OutputManager::SCREEN_WIDTH, OutputManager::SCREEN_HEIGHT);
 
+    audioMixer = AudioMixer::getInstance();
+    audioMixerThread = new QThread(this);
     audioMixer->moveToThread(audioMixerThread);
     audioMixerThread->start();
     QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
 
     // assembles .ROM file from segragated files.
-    RomAssembler r = RomAssembler();
+    std::unique_ptr<RomAssembler> r = std::make_unique<RomAssembler>();
 
     // Connect the buttons to their respective slots
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
@@ -100,32 +99,17 @@ MainWindow::MainWindow(QWidget *parent)
 /**
  * @brief Destructor for MainWindow.
  *
- * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
+ * Ensures that the threads are properly terminated and cleans up the user interface.
  */
 MainWindow::~MainWindow()
 {
     qDebug() << "MainWindow destructor called.";
 
-    // Stop frame timer if active
-    if (frameTimer && frameTimer->isActive()) {
-        frameTimer->stop();
-        delete frameTimer;
-        frameTimer = nullptr;
-        qDebug() << "Frame timer stopped and deleted.";
-    }
-
-    // Clean up InputManager thread
-    if (inputManagerThread.isRunning()) {
-        qDebug() << "Terminating InputManager thread.";
-        inputManagerThread.quit();
-        inputManagerThread.wait();
-    }
-
-    // Destroy InputManager instance safely
-    if (inputManager) {
-        QMetaObject::invokeMethod(inputManager, "destroyInstance", Qt::BlockingQueuedConnection);
-        inputManager = nullptr;
-        qDebug() << "InputManager destroyed.";
+    // Clean up PixelWidget
+    if (!pixelWidget) {
+        pixelWidget = new PixelWidget(ui->frame);
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
     }
 
     // Clean up OutputManager thread
@@ -142,11 +126,18 @@ MainWindow::~MainWindow()
         qDebug() << "OutputManager destroyed.";
     }
 
-    // Clean up PixelWidget
-    if (!pixelWidget) {
-        pixelWidget = new PixelWidget(ui->frame);
-        pixelWidget->setGeometry(ui->frame->rect());
-        pixelWidget->show();
+    // Clean up InputManager thread
+    if (inputManagerThread.isRunning()) {
+        qDebug() << "Terminating InputManager thread.";
+        inputManagerThread.quit();
+        inputManagerThread.wait();
+    }
+
+    // Destroy InputManager instance safely
+    if (inputManager) {
+        QMetaObject::invokeMethod(inputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        inputManager = nullptr;
+        qDebug() << "InputManager destroyed.";
     }
 
     stopAudioMixer();
@@ -271,10 +262,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 inputManagerThread.wait();  // Wait for the thread to finish before deleting
             }
             inputManager->destroyInstance();
-
-            if (frameTimer->isActive()) {
-                frameTimer->stop();
-            }
 
             // terminate pixelWidget
             if (pixelWidget) {

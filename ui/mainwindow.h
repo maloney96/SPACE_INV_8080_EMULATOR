@@ -77,7 +77,6 @@ private:
     InputManager* inputManager;
     QThread outputManagerThread;
     OutputManager* outputManager = nullptr;
-    QTimer* frameTimer;
     PixelWidget *pixelWidget = nullptr;
 
     bool isGameRunning = false;

@@ -281,7 +281,7 @@ void Settings::onOkButtonClicked()
  */
 void Settings::onSetKeyClicked(const QString &action)
 {
-    int currentKey = getKeyForAction(action);  // Get the current key for "Move Left"
+    int currentKey = getKeyForAction(action);
 
     // Convert currentKeymap to QMap<QString, int>
     QMap<QString, int> keyMap;

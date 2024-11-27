@@ -10,6 +10,7 @@
 #include <QMap>
 #include <QString>
 #include <QSoundEffect>
+#include <QThread>
 
 /**
  * @brief The AudioMixer class handles all audio-related functionality in the application.

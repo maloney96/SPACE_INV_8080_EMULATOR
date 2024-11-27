@@ -106,6 +106,17 @@ void EmulatorWrapper::loadSettings()
 // Destructor
 EmulatorWrapper::~EmulatorWrapper() {
     delete ram;
+    state.pc = 0;
+    state.sp = 0;
+    state.ioports.read00 = 0b00001110; // Default state for port 0
+    state.ioports.read01 = 0b00001000; // Default state for port 1
+    state.ioports.read02 = 0;
+    state.ioports.read03 = 0;
+    state.ioports.write02 = 0;
+    state.ioports.write03 = 0;
+    state.ioports.write04 = 0;
+    state.ioports.write05 = 0;
+    state.ioports.write06 = 0;
     qDebug() << "EmulatorWrapper destroyed.";
 }
 
@@ -156,8 +167,6 @@ void EmulatorWrapper::runCycle() {
 // Cleanup resources
 void EmulatorWrapper::cleanup() {
     running = false;
-    delete instance;
-    instance = nullptr;
     qDebug() << "EmulatorWrapper cleanup completed.";
 }
 

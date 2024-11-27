@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>404</width>
-    <height>353</height>
+    <height>425</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -22,13 +22,13 @@
   <property name="minimumSize">
    <size>
     <width>404</width>
-    <height>353</height>
+    <height>425</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>404</width>
-    <height>353</height>
+    <height>425</height>
    </size>
   </property>
   <property name="baseSize">
@@ -702,6 +702,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="frame">
+             <bool>true</bool>
+            </property>
             <property name="readOnly">
              <bool>true</bool>
             </property>
@@ -759,6 +762,9 @@
            <widget class="QSpinBox" name="spinBoxLives">
             <property name="styleSheet">
              <string notr="true">color: rgb(208, 0, 0); font: 900 11pt &quot;Segoe UI&quot;; background-color: rgb(0,0,0);</string>
+            </property>
+            <property name="frame">
+             <bool>false</bool>
             </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -989,8 +995,14 @@
             <property name="styleSheet">
              <string notr="true">color: rgb(208, 0, 0); font: 900 11pt &quot;Segoe UI&quot;; background-color: rgb(0,0,0);</string>
             </property>
+            <property name="frame">
+             <bool>false</bool>
+            </property>
             <property name="alignment">
              <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+            <property name="showGroupSeparator" stdset="0">
+             <bool>false</bool>
             </property>
             <property name="minimum">
              <number>1000</number>
@@ -1001,29 +1013,32 @@
             <property name="singleStep">
              <number>500</number>
             </property>
+            <property name="displayIntegerBase">
+             <number>10</number>
+            </property>
            </widget>
           </item>
          </layout>
         </item>
        </layout>
       </item>
-      <item>
-       <widget class="QDialogButtonBox" name="dialogButtonBox">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="standardButtons">
-         <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok|QDialogButtonBox::StandardButton::RestoreDefaults</set>
-        </property>
-        <property name="centerButtons">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="dialogButtonBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok|QDialogButtonBox::StandardButton::RestoreDefaults</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
     </widget>
    </item>
   </layout>

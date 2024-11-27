@@ -28,10 +28,29 @@ InputManager& InputManager::getInstance() {
  * This method should be called when the InputManager is no longer needed.
  */
 void InputManager::destroyInstance() {
+    // Check if emulator thread is running
+    if (instance->emulatorThread.isRunning()) {
+        qDebug() << "Shutting down emulator thread...";
+
+        // Clean up emulatorWrapper before stopping the thread
+        instance->emulatorWrapper->cleanup();
+
+        // Quit and wait for thread to finish
+        instance->emulatorThread.quit();
+        instance->emulatorThread.wait();
+        qDebug() << "Emulator thread stopped.";
+    }
+
+    // Safely delete the singleton instance
     if (instance != nullptr) {
+        qDebug() << "Deleting InputManager instance...";
+
+        // Ensure all signals are disconnected
+        QObject::disconnect(instance, nullptr, nullptr, nullptr);
+
         delete instance;  // Delete the singleton instance
-        instance = nullptr;  // Set the pointer to nullptr
-        qDebug() << "InputManager instance destroyed";
+        instance = nullptr;  // Reset the pointer
+        qDebug() << "InputManager instance destroyed.";
     }
 }
 
@@ -70,7 +89,6 @@ InputManager::InputManager() {
  * to control the destruction of the singleton instance.
  */
 InputManager::~InputManager() {
-    EmulatorWrapper::getInstance().cleanup();  // Destroy the EmulatorWrapper
     qDebug() << "EmulatorWrapper singleton destroyed by InputManager";
 }
 
@@ -203,12 +221,11 @@ void InputManager::fireButtonKeyup() {
 void InputManager::insertCoinKeyup() {
     ioports_ptr->read01 &= ~CREDIT;
 }
-
 /**
  * @brief Exits the game.
  *
  * This function processes the input to exit the game.
  */
 void InputManager::exitGame(){
-    //qDebug() << "Game Exited";
+
 }
