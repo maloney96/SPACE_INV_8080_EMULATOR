@@ -9,6 +9,7 @@
 
 #include "../inputManager/inputManager.h"
 #include "../emulator/io_bits.h"
+#include <thread>
 
 // Initialize the static instance ptr to nullptr
 InputManager* InputManager::instance = nullptr;
@@ -80,8 +81,15 @@ InputManager::~InputManager() {
  */
 void InputManager::moveLeft() {
     //qDebug() << "Move left";
-    ioports_ptr->read01 |= P1LEFT;
-    ioports_ptr->read02 |= P2LEFT;
+
+    auto command1 = [this]() { ioports_ptr->read01 |= P1LEFT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2LEFT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 /**
@@ -91,8 +99,14 @@ void InputManager::moveLeft() {
  */
 void InputManager::moveRight() {
     //qDebug() << "Move right";
-    ioports_ptr->read01 |= P1RIGHT;
-    ioports_ptr->read02 |= P2RIGHT;
+    auto command1 = [this]() { ioports_ptr->read01 |= P1RIGHT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2RIGHT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 /**
@@ -122,8 +136,14 @@ void InputManager::p2Button() {
  */
 void InputManager::fireButton() {
     //qDebug() << "Fire Button";
-    ioports_ptr->read01 |= P1SHOT;
-    ioports_ptr->read02 |= P2SHOT;
+    auto command1 = [this]() { ioports_ptr->read01 |= P1SHOT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2SHOT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 
@@ -139,13 +159,26 @@ void InputManager::insertCoin() {
 
 // Methods for handling release of keys
 void InputManager::moveLeftKeyup() {
-    ioports_ptr->read01 &= ~P1LEFT;
-    ioports_ptr->read02 &= ~P2LEFT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1LEFT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2LEFT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    // Join threads
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::moveRightKeyup() {
-    ioports_ptr->read01 &= ~P1RIGHT;
-    ioports_ptr->read02 &= ~P2RIGHT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1RIGHT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2RIGHT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::p1ButtonKeyup() {
@@ -157,8 +190,14 @@ void InputManager::p2ButtonKeyup() {
 }
 
 void InputManager::fireButtonKeyup() {
-    ioports_ptr->read01 &= ~P1SHOT;
-    ioports_ptr->read02 &= ~P2SHOT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1SHOT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2SHOT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::insertCoinKeyup() {

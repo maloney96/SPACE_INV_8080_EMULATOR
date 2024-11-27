@@ -285,8 +285,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
             // restore navigation buttons and background
             setUIMode("Menu");
-            this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
-            ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
         }
     }else{ QMainWindow::keyPressEvent(event); } // handle keypresses normally if game is not running
 }
@@ -336,7 +334,7 @@ void MainWindow::setGameBackground()
 
 void MainWindow::setMenuBackground()
 {
-    this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
+    this->setStyleSheet("background-image: url(:/Images/images/spaceSky.jpg);");
     ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
 }
 
