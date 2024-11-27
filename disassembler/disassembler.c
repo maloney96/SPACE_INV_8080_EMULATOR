@@ -1,3 +1,8 @@
+/*
+ * Created by Noah Freeman on 10/22/24.
+ * Adapted from emulator101.com.
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,6 +15,22 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
     int opbytes = 1;
     qdebug_log("%04x ", pc);
 
+    const char *adc_cases[] = {
+        "ADC B", "ADC C", "ADC D", "ADC E", "ADC H", "ADC L", "ADC M", "ADC A"
+    };
+
+    const char *add_cases[] = {
+        "ADD B", "ADD C", "ADD D", "ADD E", "ADD H", "ADD L", "ADD M", "ADD A",
+    };
+
+    const char *ana_cases[] = {
+        "ANA B", "ANA C", "ANA D", "ANA E", "ANA H", "ANA L", "ANA M", "ANA A",
+    };
+
+    const char *cmp_cases[] = {
+        "CMP B", "CMP C", "CMP D", "CMP E", "CMP H", "CMP L", "CMP M", "CMP A"
+    };
+
     const char *mov_cases[] = {
         "MOV B,B", "MOV B,C", "MOV B,D", "MOV B,E", "MOV B,H", "MOV B,L", "MOV B,M", "MOV B,A",
         "MOV C,B", "MOV C,C", "MOV C,D", "MOV C,E", "MOV C,H", "MOV C,L", "MOV C,M", "MOV C,A",
@@ -21,36 +42,20 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         "MOV A,B", "MOV A,C", "MOV A,D", "MOV A,E", "MOV A,H", "MOV A,L", "MOV A,M", "MOV A,A"
     };
 
-    const char *add_cases[] = {
-        "ADD B", "ADD C", "ADD D", "ADD E", "ADD H", "ADD L", "ADD M", "ADD A",
-    };
-
-    const char *adc_cases[] = {
-        "ADC B", "ADC C", "ADC D", "ADC E", "ADC H", "ADC L", "ADC M", "ADC A"
-    };
-
-    const char *sub_cases[] = {
-        "SUB B", "SUB C", "SUB D", "SUB E", "SUB H", "SUB L", "SUB M", "SUB A",
+    const char *ora_cases[] = {
+        "ORA B", "ORA C", "ORA D", "ORA E", "ORA H", "ORA L", "ORA M", "ORA A"
     };
 
     const char *sbb_cases[] = {
         "SBB B", "SBB C", "SBB D", "SBB E", "SBB H", "SBB L", "SBB M", "SBB A"
     };
 
-    const char *ana_cases[] = {
-        "ANA B", "ANA C", "ANA D", "ANA E", "ANA H", "ANA L", "ANA M", "ANA A",
+    const char *sub_cases[] = {
+        "SUB B", "SUB C", "SUB D", "SUB E", "SUB H", "SUB L", "SUB M", "SUB A",
     };
 
     const char *xra_cases[] = {
         "XRA B", "XRA C", "XRA D", "XRA E", "XRA H", "XRA L", "XRA M", "XRA A"
-    };
-
-    const char *ora_cases[] = {
-        "ORA B", "ORA C", "ORA D", "ORA E", "ORA H", "ORA L", "ORA M", "ORA A"
-    };
-
-    const char *cmp_cases[] = {
-        "CMP B", "CMP C", "CMP D", "CMP E", "CMP H", "CMP L", "CMP M", "CMP A"
     };
 
     switch (*code) {
@@ -179,69 +184,69 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
 
         // MOV cases
         case 0x40:
-	case 0x41:
-	case 0x42:
-	case 0x43:
-	case 0x44:
-	case 0x45:
-	case 0x46:
-	case 0x47:
-	case 0x48:
-	case 0x49:
-	case 0x4a:
-	case 0x4b:
-	case 0x4c:
-	case 0x4d:
-	case 0x4e:
-	case 0x4f:
-	case 0x50:
-	case 0x51:
-	case 0x52:
-	case 0x53:
-	case 0x54:
-	case 0x55:
-	case 0x56:
-	case 0x57:
-	case 0x58:
-	case 0x59:
-	case 0x5a:
-	case 0x5b:
-	case 0x5c:
-	case 0x5d:
-	case 0x5e:
-	case 0x5f:
-	case 0x60:
-	case 0x61:
-	case 0x62:
-	case 0x63:
-	case 0x64:
-	case 0x65:
-	case 0x66:
-	case 0x67:
-	case 0x68:
-	case 0x69:
-	case 0x6a:
-	case 0x6b:
-	case 0x6c:
-	case 0x6d:
-	case 0x6e:
-	case 0x6f:
-	case 0x70:
-	case 0x71:
-	case 0x72:
-	case 0x73:
-	case 0x74:
-	case 0x75:
-	case 0x76:
-	case 0x77:
-	case 0x78:
-	case 0x79:
-	case 0x7a:
-	case 0x7b:
-	case 0x7c:
-	case 0x7d:
-	case 0x7e:
-	case 0x7f:
+        case 0x41:
+        case 0x42:
+        case 0x43:
+        case 0x44:
+        case 0x45:
+        case 0x46:
+        case 0x47:
+        case 0x48:
+        case 0x49:
+        case 0x4a:
+        case 0x4b:
+        case 0x4c:
+        case 0x4d:
+        case 0x4e:
+        case 0x4f:
+        case 0x50:
+        case 0x51:
+        case 0x52:
+        case 0x53:
+        case 0x54:
+        case 0x55:
+        case 0x56:
+        case 0x57:
+        case 0x58:
+        case 0x59:
+        case 0x5a:
+        case 0x5b:
+        case 0x5c:
+        case 0x5d:
+        case 0x5e:
+        case 0x5f:
+        case 0x60:
+        case 0x61:
+        case 0x62:
+        case 0x63:
+        case 0x64:
+        case 0x65:
+        case 0x66:
+        case 0x67:
+        case 0x68:
+        case 0x69:
+        case 0x6a:
+        case 0x6b:
+        case 0x6c:
+        case 0x6d:
+        case 0x6e:
+        case 0x6f:
+        case 0x70:
+        case 0x71:
+        case 0x72:
+        case 0x73:
+        case 0x74:
+        case 0x75:
+        case 0x76:
+        case 0x77:
+        case 0x78:
+        case 0x79:
+        case 0x7a:
+        case 0x7b:
+        case 0x7c:
+        case 0x7d:
+        case 0x7e:
+        case 0x7f:
             qdebug_log("%s", mov_cases[*code - 0x40]);
             break;
 
@@ -429,19 +434,19 @@ int disassemble_opcode(unsigned char *opcode_buffer, int pc) {
         // One-off cases between 0xc0 - 0xff:
         case 0xc0: qdebug_log("RNZ"); break;
         case 0xc8: qdebug_log("RZ"); break;
-    case 0xc9: qdebug_log("RET"); break;
+        case 0xc9: qdebug_log("RET"); break;
         case 0xd0: qdebug_log("RNC"); break;
         case 0xd8: qdebug_log("RC");  break;
-    case 0xd9: qdebug_log("RET"); break;
+        case 0xd9: qdebug_log("RET"); break;
         case 0xe0: qdebug_log("RPO"); break;
         case 0xe3: qdebug_log("XTHL"); break;
         case 0xe8: qdebug_log("RPE"); break;
-    case 0xe9: qdebug_log("PCHL"); break;
+        case 0xe9: qdebug_log("PCHL"); break;
         case 0xeb: qdebug_log("XCHG"); break;
         case 0xf0: qdebug_log("RP");  break;
         case 0xf3: qdebug_log("DI");  break;
         case 0xf8: qdebug_log("RM");  break;
-    case 0xf9: qdebug_log("SPHL"); break;
+        case 0xf9: qdebug_log("SPHL"); break;
         case 0xfb: qdebug_log("EI");  break;
     }
 

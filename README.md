@@ -1,1 +1,2 @@
-# SpcInvGUI
+# Space Invaders ROM Emulator
+
