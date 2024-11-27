@@ -71,9 +71,6 @@ private:
     void handleOUT(unsigned char* opcode);
     void handleIN(unsigned char* opcode);
 
-    // VideoEmulator instance (manages read-only video memory)
-    VideoEmulator* videoEmulator;
-
     // For setting extra lives and extra life score per player preferences
     void loadSettings();
 
