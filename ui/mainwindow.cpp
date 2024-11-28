@@ -41,6 +41,15 @@
 #include <QPushButton>
 #include <QShortcut>
 
+void MainWindow::startAudioMixer()
+{
+    audioMixer = AudioMixer::getInstance();
+    audioMixerThread = new QThread(this);
+    audioMixer->moveToThread(audioMixerThread);
+    audioMixerThread->start();
+    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
+}
+
 /**
  * @brief Constructs the MainWindow object.
  *
@@ -53,21 +62,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui(new Ui::MainWindow),
     keycodes(7),
     inputManager(nullptr),
-    outputManager(nullptr),
-    frameTimer(new QTimer(this)),
-    audioMixer(AudioMixer::getInstance()),
-    audioMixerThread(new QThread(this))
+    outputManager(nullptr)
 {
     // load UI file
     ui->setupUi(this);
     setMinimumSize(OutputManager::SCREEN_WIDTH, OutputManager::SCREEN_HEIGHT);
 
-    audioMixer->moveToThread(audioMixerThread);
-    audioMixerThread->start();
-    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
+    startAudioMixer();
 
     // assembles .ROM file from segragated files.
-    RomAssembler r = RomAssembler();
+    std::unique_ptr<RomAssembler> r = std::make_unique<RomAssembler>();
 
     // Connect the buttons to their respective slots
     connect(ui->buttonPlay, &QPushButton::clicked, this, &MainWindow::onButtonPlayClicked);
@@ -100,18 +104,32 @@ MainWindow::MainWindow(QWidget *parent)
 /**
  * @brief Destructor for MainWindow.
  *
- * Ensures that the InputManager thread is properly terminated and cleans up the user interface.
+ * Ensures that the threads are properly terminated and cleans up the user interface.
  */
 MainWindow::~MainWindow()
 {
     qDebug() << "MainWindow destructor called.";
 
-    // Stop frame timer if active
-    if (frameTimer && frameTimer->isActive()) {
-        frameTimer->stop();
-        delete frameTimer;
-        frameTimer = nullptr;
-        qDebug() << "Frame timer stopped and deleted.";
+    stopAudioMixer();
+
+    // Clean up OutputManager thread
+    if (outputManagerThread.isRunning()) {
+        qDebug() << "Terminating OutputManager thread.";
+        outputManagerThread.quit();
+        outputManagerThread.wait();
+    }
+
+    // Destroy OutputManager instance safely
+    if (outputManager) {
+        QMetaObject::invokeMethod(outputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        outputManager = nullptr;
+        qDebug() << "OutputManager destroyed.";
+    }
+
+    if (pixelWidget) {
+        qDebug() << "Cleaning up PixelWidget.";
+        delete pixelWidget;
+        pixelWidget = nullptr;
     }
 
     // Clean up InputManager thread
@@ -128,29 +146,6 @@ MainWindow::~MainWindow()
         qDebug() << "InputManager destroyed.";
     }
 
-    // Clean up OutputManager thread
-    if (outputManagerThread.isRunning()) {
-        qDebug() << "Terminating OutputManager thread.";
-        outputManagerThread.quit();
-        outputManagerThread.wait();
-    }
-
-    // Destroy OutputManager instance safely
-    if (outputManager) {
-        QMetaObject::invokeMethod(outputManager, "destroyInstance", Qt::BlockingQueuedConnection);
-        outputManager = nullptr;
-        qDebug() << "OutputManager destroyed.";
-    }
-
-    // Clean up PixelWidget
-    if (!pixelWidget) {
-        pixelWidget = new PixelWidget(ui->frame);
-        pixelWidget->setGeometry(ui->frame->rect());
-        pixelWidget->show();
-    }
-
-    stopAudioMixer();
-
     // Clean up UI
     delete ui;
     qDebug() << "MainWindow cleanup complete.";
@@ -161,14 +156,14 @@ MainWindow::~MainWindow()
 /**
  * @brief Loads key mappings from a JSON file or sets default mappings.
  *
- * Checks for the existence of a `.keymap.json` file in the current directory. If the file exists,
+ * Checks for the existence of a `.settings.json` file in the current directory. If the file exists,
  * it loads the key mappings from it. If not, it sets the default key mappings and optionally saves
  * them to a new file.
  */
 void MainWindow::loadKeyMappings()
 {
     // set keymap path (file will be available after build).
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
 
@@ -187,9 +182,6 @@ void MainWindow::loadKeyMappings()
             keyMappings["p2_button"] = keycodes[4] = jsonObject["p2_button"].toInt();
             keyMappings["insert_coin"] = keycodes[5] = jsonObject["insert_coin"].toInt();
             keyMappings["exit_game"] = keycodes[6] = jsonObject["exit_game"].toInt();
-            // We don't store life settings
-            keyMappings["lives"] = 3;
-            keyMappings["extra_life_at"] = 1000;
         }
     } else {
         // If the file doesn't exist, use default from keymap.h
@@ -202,8 +194,7 @@ void MainWindow::loadKeyMappings()
         keyMappings["exit_game"] = keycodes[6] = DEFAULT_EXIT;
         keyMappings["lives"] = DEFAULT_EXTRA_LIVES;
         keyMappings["extra_life_at"] = DEFAULT_EXTRA_LIFE_AT;
-
-        // Optionally, save the default key mappings to a new file
+        // Save the default key mappings to a new file
         saveKeyMappings();
     }
 }
@@ -211,12 +202,12 @@ void MainWindow::loadKeyMappings()
 /**
  * @brief Saves the current key mappings to a JSON file.
  *
- * Writes the current key mappings to a `.keymap.json` file in the current directory.
+ * Writes the current key mappings to a `.settings.json` file in the current directory.
  */
 void MainWindow::saveKeyMappings()
 {
     // set keymap path.
-    QString keymapPath = QDir::currentPath() + "/.keymap.json";
+    QString keymapPath = QDir::currentPath() + "/.settings.json";
     QFile keymapFile(keymapPath);
 
 
@@ -230,6 +221,8 @@ void MainWindow::saveKeyMappings()
         jsonObject["p2_button"] = keyMappings["p2_button"];
         jsonObject["insert_coin"] = keyMappings["insert_coin"];
         jsonObject["exit_game"] = keyMappings["exit_game"];
+        jsonObject["lives"] = keyMappings["lives"] = DEFAULT_EXTRA_LIVES;
+        jsonObject["extra_life_at"]= keyMappings["extra_life_at"] = DEFAULT_EXTRA_LIFE_AT;
 
         QJsonDocument jsonDoc(jsonObject);
         keymapFile.write(jsonDoc.toJson());
@@ -264,6 +257,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             // exit key pressed, exit game
             inputManager->exitGame();
             isGameRunning = false;
+            outputManager->stopVideo();
 
             // terminate the input manager thread
             if (inputManagerThread.isRunning()) {
@@ -272,21 +266,27 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             }
             inputManager->destroyInstance();
 
-            if (frameTimer->isActive()) {
-                frameTimer->stop();
-            }
-
-            // terminate pixelWidget
+            // pixelWidget
             if (pixelWidget) {
                 pixelWidget->hide();
+                pixelWidget->setEnabled(false);
+                pixelWidget->setVisible(false);
                 delete pixelWidget;
                 pixelWidget = nullptr;
             }
 
+            if (outputManagerThread.isRunning()){
+                outputManagerThread.quit();
+                outputManagerThread.wait();
+            }
+
+            if (outputManager) {
+                outputManager->destroyInstance();
+                outputManager = nullptr;
+            }
+
             // restore navigation buttons and background
             setUIMode("Menu");
-            this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
-            ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
         }
     }else{ QMainWindow::keyPressEvent(event); } // handle keypresses normally if game is not running
 }
@@ -336,8 +336,11 @@ void MainWindow::setGameBackground()
 
 void MainWindow::setMenuBackground()
 {
-    this->setStyleSheet("background-image: url(:/Images/images/spcaeSky.jpg);");
+    this->setStyleSheet("background-image: url(:/Images/images/spaceSky.jpg);");
     ui->frame->setStyleSheet("background-color: rgba(255, 255, 255, 0);");
+    if(audioMixer) {
+        QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
+    }
 }
 
 /**
@@ -347,7 +350,7 @@ void MainWindow::setMenuBackground()
  * loading key mappings, and displaying the OpenGL widget for the game.
  */
 void MainWindow::onButtonPlayClicked() {
-    qDebug() << "Play Game button clicked! Starting the game...";
+    qDebug() << "\nPlay Game button clicked! Starting the game...";
 
     // Set UI mode to "Game"
     setUIMode("Game");
@@ -356,10 +359,6 @@ void MainWindow::onButtonPlayClicked() {
     if (audioMixer) {
         QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
     }
-
-    // Adjust the UI appearance for the game
-    this->setStyleSheet("background-image: none;");
-    ui->frame->setStyleSheet("background-color: black;");
 
     // Load key mappings for the game
     loadKeyMappings();
@@ -375,9 +374,9 @@ void MainWindow::onButtonPlayClicked() {
     // Initialize and show the PixelWidget for rendering
     if (!pixelWidget) {
         pixelWidget = new PixelWidget(ui->frame);
-        pixelWidget->setGeometry(ui->frame->rect());
-        pixelWidget->show();
     }
+    pixelWidget->setGeometry(ui->frame->rect());
+    pixelWidget->show();
 
     // Initialize and start the OutputManager
     if (!outputManager) {
@@ -385,8 +384,6 @@ void MainWindow::onButtonPlayClicked() {
         outputManager->initializeVideo(); // Set up video memory
         outputManager->moveToThread(&outputManagerThread);
         outputManagerThread.start();
-
-
         // Connect the frameReady signal to PixelWidget's renderFrame
         connect(outputManager, &OutputManager::frameReady, pixelWidget, &PixelWidget::updatePixelData);
         // Start the video thread

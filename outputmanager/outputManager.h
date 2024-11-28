@@ -1,11 +1,14 @@
+#pragma once
+
 #ifndef OUTPUTMANAGER_H
 #define OUTPUTMANAGER_H
 
 #include <QObject>
 #include <QTimer>
 #include <QThread>
+#include <QMutex>
 #include "audiomixer.h"
-#include "../emulator/emulatorWrapper.h"
+
 
 class OutputManager : public QObject {
     Q_OBJECT
@@ -41,6 +44,7 @@ private:
     ~OutputManager();
 
     static OutputManager* instance;
+    static QMutex mutex;
 
     QTimer* frameTimer;    ///< Timer to emit frameReady
     QThread* timerThread;  ///< Thread for the timer

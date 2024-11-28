@@ -77,7 +77,6 @@ private:
     InputManager* inputManager;
     QThread outputManagerThread;
     OutputManager* outputManager = nullptr;
-    QTimer* frameTimer;
     PixelWidget *pixelWidget = nullptr;
 
     bool isGameRunning = false;
@@ -95,6 +94,7 @@ private:
     void setUIMode(const QString &mode);
     void setGameBackground();
     void setMenuBackground();
+void startAudioMixer();
 };
 
 #endif // MAINWINDOW_H

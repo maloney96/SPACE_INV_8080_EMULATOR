@@ -5,11 +5,11 @@
 #include <QAudioEngine>
 #include <QAmbientSound>
 #include <QAudioDevice>
-#include <QMediaPlayer>
 #include <QAudioOutput>
 #include <QMap>
 #include <QString>
 #include <QSoundEffect>
+#include <QThread>
 
 /**
  * @brief The AudioMixer class handles all audio-related functionality in the application.
@@ -61,7 +61,6 @@ private:
     QAudioEngine* audioEngine;      ///< Audio engine for managing audio objects.
     QAudioDevice audioDevice;      ///< Audio device for playback.
     QAmbientSound* menuMusic;      ///< Ambient sound for looping background music.
-    QMediaPlayer* mediaPlayer;     ///< Media player for sound effects.
     QAudioOutput* audioOutput;     ///< Audio output for media playback.
 
     static AudioMixer* instance;   ///< Static pointer to the singleton instance.

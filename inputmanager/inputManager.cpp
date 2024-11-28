@@ -9,12 +9,17 @@
 
 #include "../inputManager/inputManager.h"
 #include "../emulator/io_bits.h"
+#include <thread>
 
 // Initialize the static instance ptr to nullptr
 InputManager* InputManager::instance = nullptr;
 
+// Define the static mutex
+QMutex InputManager::instanceMutex;
+
 // Static method to get the singleton instance
 InputManager& InputManager::getInstance() {
+    QMutexLocker locker(&instanceMutex);
     if (instance == nullptr) {
         instance = new InputManager();  // Create the instance if it doesn't exist
     }
@@ -27,12 +32,42 @@ InputManager& InputManager::getInstance() {
  * This method should be called when the InputManager is no longer needed.
  */
 void InputManager::destroyInstance() {
+    QMutexLocker locker(&instanceMutex);  // Lock the mutex
     if (instance != nullptr) {
-        delete instance;  // Delete the singleton instance
-        instance = nullptr;  // Set the pointer to nullptr
-        qDebug() << "InputManager instance destroyed";
+        qDebug() << "Destroying InputManager instance...";
+
+        // Stop emulator thread if running
+        if (instance->emulatorThread && instance->emulatorThread->isRunning()) {
+            qDebug() << "Shutting down emulator thread...";
+
+            if (instance->emulatorWrapper) {
+                instance->emulatorWrapper->cleanup();  // Cleanup EmulatorWrapper
+            }
+
+            instance->emulatorThread->quit();
+            instance->emulatorThread->wait();
+            qDebug() << "Emulator thread stopped.";
+        }
+
+        // Destroy the EmulatorWrapper singleton
+        EmulatorWrapper::destroyInstance();
+        instance->emulatorWrapper = nullptr;
+
+        // Disconnect all signals
+        QObject::disconnect(instance, nullptr, nullptr, nullptr);
+
+        // Cleanup thread
+        instance->emulatorThread = nullptr;
+
+        delete instance;
+        instance = nullptr;
+
+        qDebug() << "InputManager instance destroyed.";
+    } else {
+        qDebug() << "InputManager instance already null. Nothing to destroy.";
     }
 }
+
 
 /**
  * @brief Private constructor for the singleton pattern.
@@ -42,19 +77,20 @@ void InputManager::destroyInstance() {
  */
 InputManager::InputManager() {
     // Get the singleton EmulatorWrapper instance
+    emulatorThread = new QThread(this);
     emulatorWrapper = &EmulatorWrapper::getInstance();
+    qDebug() << "Current thread of emulatorWrapper:" << emulatorWrapper->thread();
     ioports_ptr = emulatorWrapper->getIOptr();
 
     qDebug() << "InputManager ioports_ptr linked to EmulatorWrapper.";
-
     // Move EmulatorWrapper to a separate thread
-    emulatorWrapper->moveToThread(&emulatorThread);
+    emulatorWrapper->moveToThread(emulatorThread);
 
     // Connect signal to start emulation
     connect(this, &InputManager::startEmulatorSignal, emulatorWrapper, &EmulatorWrapper::startEmulation, Qt::QueuedConnection);
 
     // Start the thread
-    emulatorThread.start();
+    emulatorThread->start();
 
     qDebug() << "InputManager initialized with EmulatorWrapper running in a separate thread.";
 
@@ -69,7 +105,19 @@ InputManager::InputManager() {
  * to control the destruction of the singleton instance.
  */
 InputManager::~InputManager() {
-    EmulatorWrapper::getInstance().cleanup();  // Destroy the EmulatorWrapper
+    qDebug() << "Destroying InputManager...";
+
+    // Safely stop the thread if running
+    if (emulatorThread && emulatorThread->isRunning()) {
+        qDebug() << "Stopping emulator thread...";
+        emulatorThread->quit();
+        emulatorThread->wait();  // Ensure the thread finishes its tasks
+    }
+
+    // Cleanup thread
+    delete emulatorThread;
+    emulatorThread = nullptr;
+
     qDebug() << "EmulatorWrapper singleton destroyed by InputManager";
 }
 
@@ -80,7 +128,15 @@ InputManager::~InputManager() {
  */
 void InputManager::moveLeft() {
     //qDebug() << "Move left";
-    ioports_ptr->read01 |= P1LEFT;
+
+    auto command1 = [this]() { ioports_ptr->read01 |= P1LEFT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2LEFT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 /**
@@ -90,7 +146,14 @@ void InputManager::moveLeft() {
  */
 void InputManager::moveRight() {
     //qDebug() << "Move right";
-    ioports_ptr->read01 |= P1RIGHT;
+    auto command1 = [this]() { ioports_ptr->read01 |= P1RIGHT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2RIGHT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 /**
@@ -120,7 +183,14 @@ void InputManager::p2Button() {
  */
 void InputManager::fireButton() {
     //qDebug() << "Fire Button";
-    ioports_ptr->read01 |= P1SHOT;
+    auto command1 = [this]() { ioports_ptr->read01 |= P1SHOT; };
+    auto command2 = [this]() { ioports_ptr->read02 |= P2SHOT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 
@@ -136,11 +206,26 @@ void InputManager::insertCoin() {
 
 // Methods for handling release of keys
 void InputManager::moveLeftKeyup() {
-    ioports_ptr->read01 &= ~P1LEFT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1LEFT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2LEFT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    // Join threads
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::moveRightKeyup() {
-    ioports_ptr->read01 &= ~P1RIGHT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1RIGHT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2RIGHT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::p1ButtonKeyup() {
@@ -152,18 +237,24 @@ void InputManager::p2ButtonKeyup() {
 }
 
 void InputManager::fireButtonKeyup() {
-    ioports_ptr->read01 &= ~P1SHOT;
+    auto command1 = [this]() { ioports_ptr->read01 &= ~P1SHOT; };
+    auto command2 = [this]() { ioports_ptr->read02 &= ~P2SHOT; };
+
+    std::thread thread1(command1);
+    std::thread thread2(command2);
+
+    thread1.join();
+    thread2.join();
 }
 
 void InputManager::insertCoinKeyup() {
     ioports_ptr->read01 &= ~CREDIT;
 }
-
 /**
  * @brief Exits the game.
  *
  * This function processes the input to exit the game.
  */
 void InputManager::exitGame(){
-    //qDebug() << "Game Exited";
+    qDebug() << "game Exited";
 }

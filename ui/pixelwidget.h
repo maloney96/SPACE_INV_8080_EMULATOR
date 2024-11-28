@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QImage>
-#include "../outputmanager/outputManager.h"
 
 /**
  * @brief PixelWidget is responsible for rendering the video frames.
@@ -34,7 +33,13 @@ protected:
 
 private:
     QImage image; ///< The QImage used for rendering.
+    const uint8_t* current;
+    std::vector<uint8_t> previous; ///< Buffer to store the previous frame.
+    int getPixel(int x, int y) const;
 
+    static const int frameSz;
+    static const int frameHt;
+    static const int frameWd;
 
 };
 

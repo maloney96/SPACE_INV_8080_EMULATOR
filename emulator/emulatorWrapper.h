@@ -11,7 +11,7 @@
 #include "../disassembler/disassembler.h"
 #include "../emulator/emulator.h"
 #include "../memory/mem_utils.h"
-#include "../outputmanager/outputManager.h"
+
 #include "ioports_t.h"
 
 class EmulatorWrapper : public QObject {
@@ -21,16 +21,19 @@ public:
     // Static method to get the singleton instance
     static EmulatorWrapper& getInstance();
 
+    static void destroyInstance();
+
     // Delete copy constructor and assignment operator
     EmulatorWrapper(const EmulatorWrapper&) = delete;
     EmulatorWrapper& operator=(const EmulatorWrapper&) = delete;
 
+    // Cleanup resources
     void cleanup();
 
-    // Used for handling input output
+    // Get IO ports pointer
     ioports_t* getIOptr();
 
-    // Provide access to video memory (read-only)
+    // Get video memory (read-only)
     const uint8_t* getVideoMemory() const;
 
 public slots:
@@ -41,7 +44,7 @@ public slots:
     void stepEmulation();
 
 private:
-    // Private constructor (singleton pattern)
+    // Private constructor for singleton
     EmulatorWrapper();
     ~EmulatorWrapper();
 
@@ -71,10 +74,11 @@ private:
     void handleOUT(unsigned char* opcode);
     void handleIN(unsigned char* opcode);
 
+
     // For setting extra lives and extra life score per player preferences
     void loadSettings();
 
-    // For Emulator debugging controls
+    // Debugging and pause controls
     std::condition_variable pauseCondition;
     std::mutex pauseMutex;
     std::atomic<bool> paused;
