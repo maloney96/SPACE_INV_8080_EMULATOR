@@ -95,6 +95,7 @@ private:
     void setGameBackground();
     void setMenuBackground();
 void startAudioMixer();
+void stopPixelWidget();
 };
 
 #endif // MAINWINDOW_H

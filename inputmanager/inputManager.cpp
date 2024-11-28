@@ -9,13 +9,13 @@
 
 #include "../inputManager/inputManager.h"
 #include "../emulator/io_bits.h"
-#include <thread>
 
 // Initialize the static instance ptr to nullptr
 InputManager* InputManager::instance = nullptr;
 
 // Define the static mutex
 QMutex InputManager::instanceMutex;
+std::mutex ioports_mutex;
 
 // Static method to get the singleton instance
 InputManager& InputManager::getInstance() {
@@ -67,7 +67,6 @@ void InputManager::destroyInstance() {
         qDebug() << "InputManager instance already null. Nothing to destroy.";
     }
 }
-
 
 /**
  * @brief Private constructor for the singleton pattern.
@@ -127,16 +126,11 @@ InputManager::~InputManager() {
  * This function processes the input to move the player character to the left.
  */
 void InputManager::moveLeft() {
-    //qDebug() << "Move left";
-
-    auto command1 = [this]() { ioports_ptr->read01 |= P1LEFT; };
-    auto command2 = [this]() { ioports_ptr->read02 |= P2LEFT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= P1LEFT;
+        ioports_ptr->read02 |= P2LEFT;
+    }, Qt::QueuedConnection);
 }
 
 /**
@@ -145,15 +139,11 @@ void InputManager::moveLeft() {
  * This function processes the input to move the player character to the right.
  */
 void InputManager::moveRight() {
-    //qDebug() << "Move right";
-    auto command1 = [this]() { ioports_ptr->read01 |= P1RIGHT; };
-    auto command2 = [this]() { ioports_ptr->read02 |= P2RIGHT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= P1RIGHT;
+        ioports_ptr->read02 |= P2RIGHT;
+    }, Qt::QueuedConnection);
 }
 
 /**
@@ -162,8 +152,10 @@ void InputManager::moveRight() {
  * This function processes the input corresponding to the first player's action button.
  */
 void InputManager::p1Button() {
-    //qDebug() << "P1 Button";
-    ioports_ptr->read01 |= P1START;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= P1START;
+    }, Qt::QueuedConnection);
 }
 
 /**
@@ -172,8 +164,10 @@ void InputManager::p1Button() {
  * This function processes the input corresponding to the second player's action button.
  */
 void InputManager::p2Button() {
-    //qDebug() << "P2 Button";
-    ioports_ptr->read01 |= P2START;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= P2START;
+    }, Qt::QueuedConnection);
 }
 
 /**
@@ -182,17 +176,12 @@ void InputManager::p2Button() {
  * This function processes the input corresponding to the fire action.
  */
 void InputManager::fireButton() {
-    //qDebug() << "Fire Button";
-    auto command1 = [this]() { ioports_ptr->read01 |= P1SHOT; };
-    auto command2 = [this]() { ioports_ptr->read02 |= P2SHOT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= P1SHOT;
+        ioports_ptr->read02 |= P2SHOT;
+    }, Qt::QueuedConnection);
 }
-
 
 /**
  * @brief Simulates a coin insert.
@@ -200,61 +189,66 @@ void InputManager::fireButton() {
  * This function processes the input to simulate inserting a coin into the game.
  */
 void InputManager::insertCoin() {
-    //qDebug() << "Coin Inserted";
-    ioports_ptr->read01 |= CREDIT;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 |= CREDIT;
+    }, Qt::QueuedConnection);
 }
 
 // Methods for handling release of keys
 void InputManager::moveLeftKeyup() {
-    auto command1 = [this]() { ioports_ptr->read01 &= ~P1LEFT; };
-    auto command2 = [this]() { ioports_ptr->read02 &= ~P2LEFT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    // Join threads
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~P1LEFT;
+        ioports_ptr->read02 &= ~P2LEFT;
+    }, Qt::QueuedConnection);
 }
 
 void InputManager::moveRightKeyup() {
-    auto command1 = [this]() { ioports_ptr->read01 &= ~P1RIGHT; };
-    auto command2 = [this]() { ioports_ptr->read02 &= ~P2RIGHT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~P1RIGHT;
+        ioports_ptr->read02 &= ~P2RIGHT;
+    }, Qt::QueuedConnection);
 }
 
 void InputManager::p1ButtonKeyup() {
-    ioports_ptr->read01 &= ~P1START;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~P1START;
+    }, Qt::QueuedConnection);
 }
 
 void InputManager::p2ButtonKeyup() {
-    ioports_ptr->read01 &= ~P2START;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~P2START;
+    }, Qt::QueuedConnection);
 }
 
 void InputManager::fireButtonKeyup() {
-    auto command1 = [this]() { ioports_ptr->read01 &= ~P1SHOT; };
-    auto command2 = [this]() { ioports_ptr->read02 &= ~P2SHOT; };
-
-    std::thread thread1(command1);
-    std::thread thread2(command2);
-
-    thread1.join();
-    thread2.join();
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~P1SHOT;
+        ioports_ptr->read02 &= ~P2SHOT;
+    }, Qt::QueuedConnection);
 }
 
 void InputManager::insertCoinKeyup() {
-    ioports_ptr->read01 &= ~CREDIT;
+    QMetaObject::invokeMethod(this, [this]() {
+        std::lock_guard<std::mutex> lock(ioports_mutex);
+        ioports_ptr->read01 &= ~CREDIT;
+    }, Qt::QueuedConnection);
+
 }
+
 /**
  * @brief Exits the game.
  *
  * This function processes the input to exit the game.
  */
 void InputManager::exitGame(){
-    qDebug() << "game Exited";
+    QMetaObject::invokeMethod(this, [this]() {
+        qDebug() << "Game exited.";
+    }, Qt::QueuedConnection);
 }

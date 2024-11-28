@@ -40,15 +40,8 @@
 #include <QResizeEvent>
 #include <QPushButton>
 #include <QShortcut>
-
-void MainWindow::startAudioMixer()
-{
-    audioMixer = AudioMixer::getInstance();
-    audioMixerThread = new QThread(this);
-    audioMixer->moveToThread(audioMixerThread);
-    audioMixerThread->start();
-    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
-}
+#include <QMessageBox>
+#include <QApplication>
 
 /**
  * @brief Constructs the MainWindow object.
@@ -121,16 +114,12 @@ MainWindow::~MainWindow()
 
     // Destroy OutputManager instance safely
     if (outputManager) {
-        QMetaObject::invokeMethod(outputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        outputManager->destroyInstance();
         outputManager = nullptr;
         qDebug() << "OutputManager destroyed.";
     }
 
-    if (pixelWidget) {
-        qDebug() << "Cleaning up PixelWidget.";
-        delete pixelWidget;
-        pixelWidget = nullptr;
-    }
+    stopPixelWidget();
 
     // Clean up InputManager thread
     if (inputManagerThread.isRunning()) {
@@ -141,7 +130,7 @@ MainWindow::~MainWindow()
 
     // Destroy InputManager instance safely
     if (inputManager) {
-        QMetaObject::invokeMethod(inputManager, "destroyInstance", Qt::BlockingQueuedConnection);
+        inputManager->destroyInstance();
         inputManager = nullptr;
         qDebug() << "InputManager destroyed.";
     }
@@ -230,6 +219,17 @@ void MainWindow::saveKeyMappings()
     }
 }
 
+void MainWindow::stopPixelWidget()
+{
+    if (pixelWidget) {
+        pixelWidget->hide();
+        pixelWidget->setEnabled(false);
+        pixelWidget->setVisible(false);
+        pixelWidget->deleteLater();
+        pixelWidget = nullptr;
+    }
+}
+
 /**
  * @brief Handles key press events.
  *
@@ -254,39 +254,51 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if(key == keycodes[5]) { inputManager->insertCoin(); }
         if(key == keycodes[6])
         {
+            QApplication::setOverrideCursor(Qt::WaitCursor);
+            this->setEnabled(false);
             // exit key pressed, exit game
-            inputManager->exitGame();
+            try {
+                if (inputManager) {
+                    QMetaObject::invokeMethod(inputManager, &InputManager::exitGame, Qt::QueuedConnection);
+                }
+
+                outputManager->stopVideo();
+                // terminate the input manager thread
+                if (inputManagerThread.isRunning()) {
+                    inputManagerThread.quit();
+                    inputManagerThread.wait();  // Wait for the thread to finish before deleting
+                }
+                if(inputManager){
+                    inputManager->destroyInstance();
+                    inputManager = nullptr;
+                }
+
+                // pixelWidget
+                stopPixelWidget();
+
+                if (outputManagerThread.isRunning()){
+                    outputManagerThread.quit();
+                    outputManagerThread.wait();
+                }
+
+                if (outputManager) {
+                    outputManager->destroyInstance();
+                    outputManager = nullptr;
+                }
+
+                // restore navigation buttons and background
+                setUIMode("Menu");
+            } catch (const std::exception& e){
+                QMessageBox::critical(this, "Error: Exception", e.what());
+                QApplication::restoreOverrideCursor();
+                this->setEnabled(true);
+                isGameRunning = false;
+                throw;
+            }
+            QApplication::restoreOverrideCursor();
+            this->setEnabled(true);
             isGameRunning = false;
-            outputManager->stopVideo();
 
-            // terminate the input manager thread
-            if (inputManagerThread.isRunning()) {
-                inputManagerThread.quit();
-                inputManagerThread.wait();  // Wait for the thread to finish before deleting
-            }
-            inputManager->destroyInstance();
-
-            // pixelWidget
-            if (pixelWidget) {
-                pixelWidget->hide();
-                pixelWidget->setEnabled(false);
-                pixelWidget->setVisible(false);
-                delete pixelWidget;
-                pixelWidget = nullptr;
-            }
-
-            if (outputManagerThread.isRunning()){
-                outputManagerThread.quit();
-                outputManagerThread.wait();
-            }
-
-            if (outputManager) {
-                outputManager->destroyInstance();
-                outputManager = nullptr;
-            }
-
-            // restore navigation buttons and background
-            setUIMode("Menu");
         }
     }else{ QMainWindow::keyPressEvent(event); } // handle keypresses normally if game is not running
 }
@@ -350,44 +362,46 @@ void MainWindow::setMenuBackground()
  * loading key mappings, and displaying the OpenGL widget for the game.
  */
 void MainWindow::onButtonPlayClicked() {
-    qDebug() << "\nPlay Game button clicked! Starting the game...";
+    if(!isGameRunning){
+        qDebug() << "\nPlay Game button clicked! Starting the game...";
 
-    // Set UI mode to "Game"
-    setUIMode("Game");
+        // Set UI mode to "Game"
+        setUIMode("Game");
 
-    // Stop menu music if the AudioMixer is set
-    if (audioMixer) {
-        QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
-    }
+        // Stop menu music if the AudioMixer is set
+        if (audioMixer) {
+            QMetaObject::invokeMethod(audioMixer, &AudioMixer::stopMenuMusic, Qt::QueuedConnection);
+        }
 
-    // Load key mappings for the game
-    loadKeyMappings();
+        // Load key mappings for the game
+        loadKeyMappings();
 
-    // Start the InputManager thread if not already running
-    if (!isGameRunning) {
-        inputManager = &InputManager::getInstance();
-        inputManager->moveToThread(&inputManagerThread);
-        inputManagerThread.start();
+        // Start the InputManager thread if not already running
+        if (!isGameRunning) {
+            inputManager = &InputManager::getInstance();
+            inputManager->moveToThread(&inputManagerThread);
+            inputManagerThread.start();
+        }
+
+        // Initialize and show the PixelWidget for rendering
+        if (!pixelWidget) {
+            pixelWidget = new PixelWidget(ui->frame);
+        }
+        pixelWidget->setGeometry(ui->frame->rect());
+        pixelWidget->show();
+
+        // Initialize and start the OutputManager
+        if (!outputManager) {
+            outputManager = OutputManager::getInstance();
+            outputManager->initializeVideo(); // Set up video memory
+            outputManager->moveToThread(&outputManagerThread);
+            outputManagerThread.start();
+            // Connect the frameReady signal to PixelWidget's renderFrame
+            connect(outputManager, &OutputManager::frameReady, pixelWidget, &PixelWidget::updatePixelData);
+            // Start the video thread
+            outputManager->startVideo();
+        }
         isGameRunning = true;
-    }
-
-    // Initialize and show the PixelWidget for rendering
-    if (!pixelWidget) {
-        pixelWidget = new PixelWidget(ui->frame);
-    }
-    pixelWidget->setGeometry(ui->frame->rect());
-    pixelWidget->show();
-
-    // Initialize and start the OutputManager
-    if (!outputManager) {
-        outputManager = OutputManager::getInstance();
-        outputManager->initializeVideo(); // Set up video memory
-        outputManager->moveToThread(&outputManagerThread);
-        outputManagerThread.start();
-        // Connect the frameReady signal to PixelWidget's renderFrame
-        connect(outputManager, &OutputManager::frameReady, pixelWidget, &PixelWidget::updatePixelData);
-        // Start the video thread
-        outputManager->startVideo();
     }
 }
 
@@ -465,6 +479,15 @@ void MainWindow::resizeEvent(QResizeEvent *event)
     if (pixelWidget) {
         pixelWidget->setGeometry(ui->frame->rect());
     }
+}
+
+void MainWindow::startAudioMixer()
+{
+    audioMixer = AudioMixer::getInstance();
+    audioMixerThread = new QThread(this);
+    audioMixer->moveToThread(audioMixerThread);
+    audioMixerThread->start();
+    QMetaObject::invokeMethod(audioMixer, &AudioMixer::startMenuMusic, Qt::QueuedConnection);
 }
 
 void MainWindow::stopAudioMixer()
