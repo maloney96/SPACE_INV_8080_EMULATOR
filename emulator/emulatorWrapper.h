@@ -74,7 +74,8 @@ private:
     void handleOUT(unsigned char* opcode);
     void handleIN(unsigned char* opcode);
 
-    // Load emulator settings
+
+    // For setting extra lives and extra life score per player preferences
     void loadSettings();
 
     // Debugging and pause controls

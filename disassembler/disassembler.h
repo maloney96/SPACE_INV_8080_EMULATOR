@@ -1,3 +1,8 @@
+/*
+ * Created by Noah Freeman on 10/22/24.
+ * Adapted from emulator101.com.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
