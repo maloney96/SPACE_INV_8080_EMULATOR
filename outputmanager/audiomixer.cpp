@@ -28,7 +28,6 @@ AudioMixer::~AudioMixer() {
         menuMusic->stop();
         QObject::disconnect(menuMusic, nullptr, nullptr, nullptr);
         menuMusic->setSource(QUrl());
-        delete menuMusic;
         menuMusic = nullptr;
         qDebug() << "Menu music stopped and deleted.";
     }
@@ -38,7 +37,6 @@ AudioMixer::~AudioMixer() {
         QSoundEffect* soundEffect = it.value();
         if (soundEffect) {
             soundEffect->stop();
-            delete soundEffect;
         }
     }
     soundBoard.clear();
@@ -47,14 +45,12 @@ AudioMixer::~AudioMixer() {
     // Delete the audio engine
     if (audioEngine) {
         audioEngine->stop();
-        delete audioEngine;
         audioEngine = nullptr;
         qDebug() << "Audio engine stopped and deleted.";
     }
 
     // Delete the audio output
     if (audioOutput) {
-        delete audioOutput;
         audioOutput = nullptr;
         qDebug() << "Audio output deleted.";
     }

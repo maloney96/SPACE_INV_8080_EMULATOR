@@ -57,7 +57,6 @@ void InputManager::destroyInstance() {
         QObject::disconnect(instance, nullptr, nullptr, nullptr);
 
         // Cleanup thread
-        delete instance->emulatorThread;
         instance->emulatorThread = nullptr;
 
         delete instance;

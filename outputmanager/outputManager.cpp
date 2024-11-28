@@ -55,13 +55,11 @@ OutputManager::~OutputManager() {
     if (timerThread) {
         timerThread->quit();
         timerThread->wait(); // Wait for the thread to finish cleanly.
-        delete timerThread;
         timerThread = nullptr;
     }
 
     // Clean up the timer itself.
     if (frameTimer) {
-        delete frameTimer;
         frameTimer = nullptr;
     }
 
@@ -104,30 +102,6 @@ void OutputManager::stopVideo() {
 void OutputManager::setAudioMixer(AudioMixer* mixer) {
     audioMixer = mixer;
     qDebug() << "AudioMixer set in OutputManager";
-}
-
-void OutputManager::playSoundEffect(const QString& filePath, bool loop = false) {
-    if (audioMixer) {
-        audioMixer->playSoundEffect(filePath, loop);
-    } else {
-        qWarning() << "AudioMixer not set. Cannot play sound effect.";
-    }
-}
-
-void OutputManager::startBackgroundMusic() {
-    if (audioMixer) {
-        audioMixer->startMenuMusic();
-    } else {
-        qWarning() << "AudioMixer not set. Cannot start background music.";
-    }
-}
-
-void OutputManager::stopBackgroundMusic() {
-    if (audioMixer) {
-        audioMixer->stopMenuMusic();
-    } else {
-        qWarning() << "AudioMixer not set. Cannot stop background music.";
-    }
 }
 
 void OutputManager::handleSoundUpdates(uint8_t port_num, uint8_t old_value, uint8_t new_value) {
