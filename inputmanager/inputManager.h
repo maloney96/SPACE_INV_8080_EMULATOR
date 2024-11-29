@@ -32,7 +32,6 @@ class InputManager : public QObject  // Inherit from QObject
 public:
 
 
-
      /**
      * @brief Gets the singleton instance of the InputManager.
      *

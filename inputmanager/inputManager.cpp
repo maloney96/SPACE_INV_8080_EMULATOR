@@ -250,11 +250,5 @@ void InputManager::fireButtonKeyup() {
 void InputManager::insertCoinKeyup() {
     ioports_ptr->read01 &= ~CREDIT;
 }
-/**
- * @brief Exits the game.
- *
- * This function processes the input to exit the game.
- */
-void InputManager::exitGame(){
-    qDebug() << "game Exited";
-}
+
+
