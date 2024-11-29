@@ -255,7 +255,6 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         if(key == keycodes[6])
         {
             // exit key pressed, exit game
-            inputManager->exitGame();
             isGameRunning = false;
             outputManager->stopVideo();
 
@@ -265,6 +264,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 inputManagerThread.wait();  // Wait for the thread to finish before deleting
             }
             inputManager->destroyInstance();
+            inputManager = nullptr;
 
             // pixelWidget
             if (pixelWidget) {
